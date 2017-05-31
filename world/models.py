@@ -24,6 +24,8 @@ class Tribe(models.Model):
 	)
 	
 	name = models.CharField(max_length = 20, choices = options)
+	def __unicode__(self):
+		return unicode(self.name)
 
 class Building(models.Model):
 	parliament = 'Parliament'
@@ -88,7 +90,9 @@ class Building(models.Model):
 		# bonus buildings for each nation
 	)
 	name = models.CharField(max_length = 50, choices = options)
-	lvl = models.IntegerField(default = 0)	
+	lvl = models.IntegerField(default = 0)
+	def __unicode__(self):
+		return unicode(self.name)	
 		
 class Center(models.Model):
 	pos_01 = models.ForeignKey(Building, default = None, related_name="Typeone")
@@ -125,6 +129,8 @@ class Field(models.Model):
 	)
 	name = models.CharField(max_length = 50)
 	lvl = models.IntegerField(default = 0)
+	def __unicode__(self):
+		return unicode(self.name)
 	
 class Fields(models.Model):
 	pos_01 = models.ForeignKey(Field, default = None, related_name="Typeone")
@@ -209,6 +215,7 @@ class Hero(models.Model):
 	strength = models.IntegerField(verbose_name = _('Hero strength'), default = 0) # It also have more than initial strength
 	attack_bonus = models.IntegerField(verbose_name = _('Attack bonus '), default = 0) # Here comes the attack bonus
 	defense_bonus = models.IntegerField(verbose_name = _('Defense bonus '), default = 0) # And defense bonus
+	gold_bonus = models.IntegerField(verbose_name = _('Gold bonus'), default = 0)
 	resources = models.IntegerField(verbose_name = _('Resource bonus'), default = 0) # And can also increase village produciton
 	
 class Bonus(models.Model):
@@ -233,7 +240,9 @@ class Attack(models.Model):
 		(raid , _('Raid')),
 	)
 	attack_type = models.CharField(max_length = 25, choices=options)
-	
+	def __unicode__(self):
+		return unicode(self.attack_type)
+        
 class Report(models.Model):
 	attacker_village = models.ForeignKey(Village)
 	attacker_army = models.ForeignKey(Army)
@@ -301,6 +310,7 @@ class Player(models.Model):
 	old_att = models.IntegerField()
 	old_def = models.IntegerField()
 	banned = models.BooleanField(default = False)
+	last_village = models.ForeignKey(Village, related_name = "last")
 	is_active = models.BooleanField(default = False)
 	activation_key = models.CharField(max_length = 25)
 	
@@ -323,6 +333,8 @@ class Troop_type(models.Model):
 		(marine, _('Marine')),
 	)
 	typ = models.CharField(max_length = 10, choices = options)
+	def __unicode__(self):
+		return unicode(self.typ)
 	
 class Troop(models.Model):
 	name = models.CharField(max_length = 25)
@@ -342,6 +354,8 @@ class Troop(models.Model):
 	picture = models.ImageField()
 	carry = models.IntegerField(default = 0)
 	destruction_power = models.IntegerField(default = 0)
+	def __unicode__(self):
+		return unicode(self.name)
 
 class Partisan_troops(models.Model):
 	t0 = models.ForeignKey(Troop, related_name = "Volounteer")
@@ -506,6 +520,8 @@ class Artifact(models.Model):
 		(sarin, _('Sarin')), # Confusion
 	) 
 	typ = models.CharField(max_length = 15, choices = options)
+	def __unicode__(self):
+		return unicode(self.typ)
 	
 class Artifacts(models.Model):
 	arti = models.ManyToManyField(Artifact)

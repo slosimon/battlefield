@@ -82,4 +82,6 @@ class Building(models.Model):
 	name = models.CharField(max_length = 50, choices = options)
 	image = models.ImageField()
 	description = models.TextField(max_length = 1000)
+	def __unicode__(self):
+		return unicode(self.name)
 	
