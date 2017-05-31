@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,22 +7,22 @@
     <meta name="description" content="Just another game in the web">
     <meta name="author" content="simon@slosimon.com">
     <title>Slosimon | Free mass player online game</title>
-    <link href="static/css/bootstrap.min.css" rel="stylesheet">
-    <link href="static/css/font-awesome.min.css" rel="stylesheet">
-    <link href="static/css/animate.min.css" rel="stylesheet"> 
-    <link href="static/css/lightbox.css" rel="stylesheet"> 
-	<link href="static/css/main.css" rel="stylesheet">
-	<link href="static/css/responsive.css" rel="stylesheet">
+    <link href="{% static 'css/bootstrap.min.css'%}" rel="stylesheet">
+    <link href="{% static 'css/font-awesome.min.css'%}" rel="stylesheet">
+    <link href="{% static 'css/animate.min.css'%}" rel="stylesheet"> 
+    <link href="{% static 'css/lightbox.css'%}" rel="stylesheet"> 
+	<link href="{% static 'css/main.css'%}" rel="stylesheet">
+	<link href="{% static 'css/responsive.css'%}" rel="stylesheet">
 
     <!--[if lt IE 9]>
 	    <script src="js/html5shiv.js"></script>
 	    <script src="js/respond.min.js"></script>
     <![endif]-->       
-    <link rel="shortcut icon" href="static/images/ico/favicon.ico">
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="static/images/ico/apple-touch-icon-144-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="static/images/ico/apple-touch-icon-114-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="static/images/ico/apple-touch-icon-72-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" href="static/images/ico/apple-touch-icon-57-precomposed.png">
+    <link rel="shortcut icon" href="{% static 'images/ico/favicon.ico'%}">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="{% static 'images/ico/apple-touch-icon-144-precomposed.png'%}">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="{% static 'images/ico/apple-touch-icon-114-precomposed.png'%}">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="{% static 'images/ico/apple-touch-icon-72-precomposed.png'%}">
+    <link rel="apple-touch-icon-precomposed" href="{% static 'images/ico/apple-touch-icon-57-precomposed.png">
 </head><!--/head-->
 
 <body>
@@ -51,7 +52,7 @@
                     </button>
 
                     <a class="navbar-brand" href="/">
-                    	<h1><img src="static/images/logo.png" alt="logo"></h1>
+                    	<h1><img src="{% static 'images/logo.png'%}" alt="logo"></h1>
                     </a>
                     
                 </div>
@@ -60,12 +61,12 @@
                         <li class="active"><a href="/">Home</a></li>
                         <li class="dropdown"><a href="#">Pages <i class="fa fa-angle-down"></i></a>
                             <ul role="menu" class="sub-menu">
-                                <li><a href="aboutus.html">About the game</a></li>
-                                <li><a href="aboutus2.html">Tutorial</a></li>
-                                <li><a href="service.html">Developers</a></li>
-                                <li><a href="pricing.html">Pricing</a></li>
-                                <li><a href="contact.html">Sponsors</a></li>
-                                <li><a href="contact2.html">Private server</a></li>
+                                <li><a href="about/">About the game</a></li>
+                                <li><a href="tutorial/">Tutorial</a></li>
+                                <li><a href="developers/">Developers</a></li>
+                                <li><a href="pricing/">Pricing</a></li>
+                                <li><a href="sponsors/">Sponsors</a></li>
+                                <li><a href="private/">Private server</a></li>
                             </ul>
                         </li>                    
                         <li class="dropdown"><a href="portfolio.html">Data <i class="fa fa-angle-down"></i></a>
@@ -75,8 +76,7 @@
                                 <li><a href="portfolioone.html">Troops</a></li>
                                 <li><a href="portfoliotwo.html">Artifacts</a></li>
                             </ul>
-                        </li>                         
-                        <li><a href="shortcodes.html ">Shortcodes</a></li>                    
+                        </li>                                           
                     </ul>
                 </div>
                 <div class="search">
@@ -98,24 +98,24 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-12 text-center bottom-separator">
-                    <img src="static/images/home/under.png" class="img-responsive inline" alt="">
+                    <img src="{% static 'images/home/under.png'%}" class="img-responsive inline" alt="">
                 </div>
                 <div class="col-md-4 col-sm-6">
                     <div class="testimonial bottom">
                         <h2>Testimonial</h2>
                         <div class="media">
                             <div class="pull-left">
-                                <a href="#"><img src="static/images/home/profile1.png" alt=""></a>
+                                <a href="#"><img src="{% static 'images/home/profile1.png'%}" alt=""></a>
                             </div>
                             <div class="media-body">
-                                <blockquote>With passion, everything is possible. Without it, </blockquote>
+                                <blockquote>With passion, everything is possible. Without it, everything seems imposible.</blockquote>
                                 <h3><a href="#">- Slosimon</a></h3>
                                
                             </div>
                          </div>
                         <div class="media">
                             <div class="pull-left">
-                                <a href="#"><img src="static/images/home/profile2.png" alt=""></a>
+                                <a href="#"><img src="{% static 'images/home/profile2.png'%}" alt=""></a>
                             </div>
                             <div class="media-body">
                                 <blockquote>After every downfall there comes the sunrise with a new day and new opportunity.</blockquote>
@@ -141,7 +141,10 @@
 								 </script>
 							</div>
                         </address>
-
+						<address>
+							<p>E-mail: </p>
+							<a href="mailto:simon@slosimon.com">simon@slosimon.com</a>
+						</address>
           
                     </div>
                 </div>
@@ -164,10 +167,12 @@
     </footer>
     <!--/#footer-->
 
-    <script type="text/javascript" src="static/js/jquery.js"></script>
-    <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="static/js/lightbox.min.js"></script>
-    <script type="text/javascript" src="static/js/wow.min.js"></script>
-    <script type="text/javascript" src="static/js/main.js"></script>   
+    <script type="text/javascript" src="{% static 'js/jquery.js'%}"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap.min.js'%}"></script>
+    <script type="text/javascript" src="{% static 'js/lightbox.min.js'%}"></script>
+    <script type="text/javascript" src="{% static 'js/wow.min.js'%}"></script>
+    <script type="text/javascript" src="{% static 'js/main.js'%}"></script>   
+        <script type="text/javascript" src="{% static 'js/jquery.countTo.js'%}"></script>
+
 </body>
 </html>

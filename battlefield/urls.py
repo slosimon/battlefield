@@ -16,10 +16,16 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from django.conf import settings
-from home import views
+from home import views as views_home
 from django.conf.urls.static import static
 
 urlpatterns = [
-	url(r'^$', views.index, name = 'index'), 
+	url(r'^$', views_home.index, name = 'index'), 
+	url(r'^about/$', views_home.about, name = 'about'),
+	url(r'^tutorial/$', views_home.tutorial, name = 'tutorial'),
+	url(r'^developers/$', views_home.developers, name = 'developers'),
+	url(r'^pricing/$', views_home.pricing, name = 'pricing'),
+	url(r'^sponsors/$', views_home.tutorial, name = 'sponsors'),
+	url(r'^private/$', views_home.developers, name = 'private'),
     url(r'^admin/', admin.site.urls),
-]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

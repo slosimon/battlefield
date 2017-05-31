@@ -129,6 +129,10 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = ''
-
 STATICFILES_DIRS = ( os.path.join('static'), )
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR+'/media/'
+MEDIAFILES_DIRS = ( os.path.join('media'), )
+
 SPEED = 10
