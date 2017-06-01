@@ -25,7 +25,7 @@ urlpatterns = [
 	url(r'^tutorial/$', views_home.tutorial, name = 'tutorial'),
 	url(r'^developers/$', views_home.developers, name = 'developers'),
 	url(r'^pricing/$', views_home.pricing, name = 'pricing'),
-	url(r'^sponsors/$', views_home.tutorial, name = 'sponsors'),
-	url(r'^private/$', views_home.developers, name = 'private'),
+	url(r'^sponsors/$', views_home.sponsors, name = 'sponsors'),
+	url(r'^private/$', views_home.private, name = 'private'),
     url(r'^admin/', admin.site.urls),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
