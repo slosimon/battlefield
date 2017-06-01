@@ -29,3 +29,5 @@ urlpatterns = [
 	url(r'^private/$', views_home.private, name = 'private'),
     url(r'^admin/', admin.site.urls),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+handler404='battlefield.views.handler404'
