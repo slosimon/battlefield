@@ -5,6 +5,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import building
 # Create your models here.
 
 class Tribe(models.Model):
@@ -28,109 +31,49 @@ class Tribe(models.Model):
 		return unicode(self.name)
 
 class Building(models.Model):
-	parliament = 'Parliament'
-	summer_residence = 'Summer residence' 
-	town_hall = 'Town hall' 
-	headquarters = 'Headquarters' 
-	shelter = 'Shelter' 
-	warehouse = 'Warehouse' 
-	silo = 'Silo' 
-	uni = 'University'
-	market = 'Market'
-	camp = 'Training camp'
-	ammunition = 'Ammunition workshop' 
-	hangar = 'Hangar'
-	railway = 'Railway' 
-	port = 'Port' 
-	artilery = 'Artilery mansion' 
-	hero = "Hero's birth house"
-	hideout = 'Hideout' 
-	large_warehouse = 'Large warehouse'
-	large_silo = 'Large silo'
-	large_camp = 'Large camp'
-	large_hangar = 'Large hangar'
-	bunker = 'Bunker'
-	def_line = 'Defensive line' 
-	oil_refinery = 'Oil refinery'
-	iron_works = 'Iron works'
-	powerplant = 'Powerplant' 
-	slaughter_house = 'Slaughter house' 
-	can_filling_centre = 'Can filling centre'
-	nuke = 'Nuke research lab'
-	options = (
-		(parliament , _('Parliament')), # Palace
-		(summer_residence , _('Summer residence')), # Residence
-		(town_hall, _('Town hall')),
-		(headquarters , _('Headquarters')), # Main building
-		(shelter , _('Shelter')), # Cranny
-		(warehouse , _('Warehouse')), # Warehouse
-		(silo , _('Silo')), # Granary
-		(uni , _('University')), # Academy
-		(market , _('Market')), # Marketplace
-		(camp , _('Training camp')), # Barracks
-		(ammunition , _('Ammunition workshop')), # Armoury/Smithy
-		(hangar , _('Hangar')), # Stable
-		(railway , _('Railway')), # Tournament square
-		(port , _('Port')), # For navy -> new thing
-		(artilery , _('Artilery mansion')), # Workshop
-		(hero , _("Hero's birth house")), # Hero mansion
-		(hideout , _('Hideout')), # Treasury
-		(large_warehouse , _('Large warehouse')),
-		(large_silo , _('Large silo')),
-		(large_camp , _('Large camp')),
-		(large_hangar , _('Large hangar')),
-		(bunker , _('Bunker')), # Rally point
-		(def_line , _('Defensive line')), # Wall
-		(oil_refinery , _('Oil refinery')), # Bonus building for oil
-		(iron_works , _('Iron works')), # Iron foundry
-		(powerplant , _('Powerplant')), # Bouns building for coal mine -> resource = power
-		(slaughter_house , _('Slaughter house')), # Food bonus buiding no.1
-		(can_filling_centre , _('Can filling centre')), # Food bonus building no.2
-		(nuke , _('Nuke research lab')), # WW
-		# bonus buildings for each nation
-	)
-	name = models.CharField(max_length = 50, choices = options)
+	building = models.ForeignKey('building.Building', null = True)
 	lvl = models.IntegerField(default = 0)
 	def __unicode__(self):
 		return unicode(self.name)	
 		
 class Center(models.Model):
-	pos_01 = models.ForeignKey(Building, default = None, related_name="Typeone")
-	pos_02 = models.ForeignKey(Building, default = None, related_name="Typetwo")
-	pos_03 = models.ForeignKey(Building, default = None, related_name="Typethree")
-	pos_04 = models.ForeignKey(Building, default = None, related_name="Typefour")
-	pos_05 = models.ForeignKey(Building, default = None, related_name="Typefive")
-	pos_06 = models.ForeignKey(Building, default = None, related_name="Typesix")
-	pos_07 = models.ForeignKey(Building, default = None, related_name="Typeseven")
-	pos_08 = models.ForeignKey(Building, default = None, related_name="Typeeight")
-	pos_09 = models.ForeignKey(Building, default = None, related_name="Typenine")
-	pos_10 = models.ForeignKey(Building, default = None, related_name="Typeten")
-	pos_11 = models.ForeignKey(Building, default = None, related_name="Typeeleven")
-	pos_12 = models.ForeignKey(Building, default = None, related_name="Typetwelve")
-	pos_13 = models.ForeignKey(Building, default = None, related_name="Typethreet")
-	pos_14 = models.ForeignKey(Building, default = None, related_name="Typefourt")
-	pos_15 = models.ForeignKey(Building, default = None, related_name="Typefivet")
-	pos_16 = models.ForeignKey(Building, default = None, related_name="Typesixt")
-	pos_17 = models.ForeignKey(Building, default = None, related_name="Typesevent")
-	pos_18 = models.ForeignKey(Building, default = None, related_name="Typeeightt")
-	pos_19 = models.ForeignKey(Building, default = None, related_name="Typeninet")
-	pos_20 = models.ForeignKey(Building, default = None, related_name="Typetwenty")
+	pos_01 = models.ForeignKey(Building, default = None, null = True, related_name="Typeone")
+	pos_02 = models.ForeignKey(Building, default = None, null = True, related_name="Typetwo")
+	pos_03 = models.ForeignKey(Building, default = None, null = True, related_name="Typethree")
+	pos_04 = models.ForeignKey(Building, default = None, null = True, related_name="Typefour")
+	pos_05 = models.ForeignKey(Building, default = None, null = True, related_name="Typefive")
+	pos_06 = models.ForeignKey(Building, default = None, null = True, related_name="Typesix")
+	pos_07 = models.ForeignKey(Building, default = None, null = True, related_name="Typeseven")
+	pos_08 = models.ForeignKey(Building, default = None, null = True, related_name="Typeeight")
+	pos_09 = models.ForeignKey(Building, default = None, null = True, related_name="Typenine")
+	pos_10 = models.ForeignKey(Building, default = None, null = True, related_name="Typeten")
+	pos_11 = models.ForeignKey(Building, default = None, null = True, related_name="Typeeleven")
+	pos_12 = models.ForeignKey(Building, default = None, null = True, related_name="Typetwelve")
+	pos_13 = models.ForeignKey(Building, default = None, null = True, related_name="Typethreet")
+	pos_14 = models.ForeignKey(Building, default = None, null = True, related_name="Typefourt")
+	pos_15 = models.ForeignKey(Building, default = None, null = True, related_name="Typefivet")
+	pos_16 = models.ForeignKey(Building, default = None, null = True, related_name="Typesixt")
+	pos_17 = models.ForeignKey(Building, default = None, null = True, related_name="Typesevent")
+	pos_18 = models.ForeignKey(Building, default = None, null = True, related_name="Typeeightt")
+	pos_19 = models.ForeignKey(Building, default = None, null = True, related_name="Typeninet")
+	pos_20 = models.ForeignKey(Building, default = None, null = True, related_name="Typetwenty")
+	pos_21 = models.ForeignKey(Building, default = None, null = True, related_name="Typeto")
+	pos_22 = models.ForeignKey(Building, default = None, null = True, related_name="Typett")
+	pos_23 = models.ForeignKey(Building, default = None, null = True, related_name="Typetth")
+	pos_24 = models.ForeignKey(Building, default = None, null = True, related_name="Typetf")
 
 class Field(models.Model):
-	oil_field ='Oil field'
-	coal_mine ='Coal mine'
-	iron_mine ='Iron mine'
-	farm ='Farm'
-	options = (
-		(oil_field , _('Oil field')),
-		(coal_mine , _('Coal mine')),
-		(iron_mine , _('Iron mine')),
-		(farm , _('Farm')),
-	)
-	name = models.CharField(max_length = 50)
+	name = models.ForeignKey('building.Field', null = True)
 	lvl = models.IntegerField(default = 0)
 	def __unicode__(self):
 		return unicode(self.name)
+		
+class VillageType(models.Model):
+	oil_field = models.IntegerField()
+	forrest = models.IntegerField()
+	iron_mine = models.IntegerField()
+	farm = models.IntegerField()
+	
 	
 class Fields(models.Model):
 	pos_01 = models.ForeignKey(Field, default = None, related_name="Typeone")
@@ -177,42 +120,38 @@ class Army(models.Model):
 class Resources(models.Model):
 	oil = models.IntegerField(default = 750, verbose_name = _('Oil'))
 	iron = models.IntegerField(default = 750, verbose_name = _('Iron'))
-	coal = models.IntegerField(default = 750, verbose_name = _('Coal'))
+	wood = models.IntegerField(default = 750, verbose_name = _('Wood'))
 	food = models.IntegerField(default = 750, verbose_name = _('Food'))
 	
+	
 class Village(models.Model):
-	name = models.CharField(max_length = 26)
-	center = models.ForeignKey(Center) # Because every village needs it center
-	fields = models.ForeignKey(Fields) # Because every village need resource fields
-	location_latitude = models.IntegerField() # Because every village need co-ordinates
-	location_longitude = models.IntegerField() # And two of them
+	typ = models.ForeignKey(VillageType)
+	name = models.CharField(max_length = 26, null = True)
+	center = models.ForeignKey(Center, null = True) # Because every village needs it center
+	fields = models.ForeignKey(Fields, null = True) # Because every village need resource fields
+	location_latitude = models.IntegerField(null = True) # Because every village need co-ordinates
+	location_longitude = models.IntegerField(null = True) # And two of them
 	population = models.IntegerField(default = 0) # Every village should also have some inhabitants
-	army = models.ForeignKey(Army) # And troops
+	army = models.ForeignKey(Army, null = True) # And troops
 	capital = models.BooleanField(default = True)
-	resources = models.ForeignKey(Resources, related_name = "Resources")
-	update = models.DateTimeField(default = datetime.now(), verbose_name = _('Last update time'))
+	resources = models.ForeignKey(Resources, related_name = "Resources", null = True)
+	update = models.DateTimeField(default = datetime.now(), verbose_name = _('Last update time'), null = True)
 	culture_points = models.IntegerField(default = 0)
 	storage_capacity = models.IntegerField(default = 800)
 	food_capacity = models.IntegerField(default = 800)
-	production = models.ForeignKey(Resources, related_name = "Production")
+	production = models.ForeignKey(Resources, related_name = "Production", null = True)
+	reinforcements = models.ManyToManyField(Army, related_name="reinforcements", null = True)
 
 class Update_negative(models.Model):
 	empty_time = models.DateTimeField()
 	village = models.ForeignKey(Village)
-	
-class Oasis(models.Model):
-	location_latitude = models.IntegerField() # Because every oasis need co-ordinates
-	location_longitude = models.IntegerField() # And two of them
-	bonus_1 = models.IntegerField() # First bonus
-	bonus_2 = models.IntegerField() # And possibly the seconday one
-	army = models.ForeignKey(Army)
 	
 class Hero(models.Model):
 	name = models.CharField(max_length = 50, verbose_name=_('Name')) # There are no name heroes
 	experience = models.IntegerField(verbose_name = _('Hero experience'), default = 0) # And hero might get stronger after some battle
 	level = models.IntegerField(verbose_name = _('Hero level'), default = 0) # And his level goes higher
 	health = models.IntegerField(verbose_name=_('Health'), default = 100) # And needs to be alive
-	strength = models.IntegerField(verbose_name = _('Hero strength'), default = 0) # It also have more than initial strength
+	strength = models.IntegerField(verbose_name = _('Hero strength'), default = 100) # It also have more than initial strength
 	attack_bonus = models.IntegerField(verbose_name = _('Attack bonus '), default = 0) # Here comes the attack bonus
 	defense_bonus = models.IntegerField(verbose_name = _('Defense bonus '), default = 0) # And defense bonus
 	gold_bonus = models.IntegerField(verbose_name = _('Gold bonus'), default = 0)
@@ -287,33 +226,58 @@ class Medals(models.Model):
 	image = models.ImageField()
 	
 class Player(models.Model):
-	user = models.ForeignKey(User)
+	user = models.OneToOneField(User, on_delete=models.CASCADE)
 	hero = models.ForeignKey(Hero)
-	villages = models.ManyToManyField(Village)
+	villages = models.ManyToManyField(Village, null=True)
 	population = models.IntegerField(verbose_name = _('Population'), default = 2)
 	tribe = models.ForeignKey(Tribe)
 	gold = models.IntegerField(verbose_name = _('Gold'), default = 30)
 	bonuses = models.ForeignKey(Bonus)
-	reports = models.ManyToManyField(Report)
-	scouting_reports = models.ManyToManyField(Scouting)
-	market_reports = models.ManyToManyField(Trading)
-	sitter_1 = models.ForeignKey(User, related_name="first_sitter", default = None)
-	sitter_2 = models.ForeignKey(User, related_name="second_sitter", default = None)
+	reports = models.ManyToManyField(Report, null = True)
+	scouting_reports = models.ManyToManyField(Scouting, null = True)
+	market_reports = models.ManyToManyField(Trading, null = True)
+	sitter_1 = models.ForeignKey(User, related_name="first_sitter", default = None, null = True)
+	sitter_2 = models.ForeignKey(User, related_name="second_sitter", default = None, null = True)
 	last_login = models.DateTimeField(default = datetime.now())
 	artifact_holder = models.BooleanField(default = False)
 	culture_points = models.IntegerField(default = 0)
-	medals = models.ManyToManyField(Medals)
+	medals = models.ManyToManyField(Medals, null = True)
 	old_rank = models.IntegerField()
-	raided = models.IntegerField()
-	attack_points = models.IntegerField()
-	def_points = models.IntegerField()
-	old_att = models.IntegerField()
-	old_def = models.IntegerField()
+	raided = models.IntegerField(default = 0)
+	attack_points = models.IntegerField(default = 0)
+	def_points = models.IntegerField(default = 0)
+	old_att = models.IntegerField(default = 0)
+	old_def = models.IntegerField(default = 0)
 	banned = models.BooleanField(default = False)
-	last_village = models.ForeignKey(Village, related_name = "last")
+	last_village = models.ForeignKey(Village, related_name = "last", null = True)
 	is_active = models.BooleanField(default = False)
-	activation_key = models.CharField(max_length = 25)
+	activation_key = models.CharField(max_length = 25, null = True)
+	profile = models.TextField(max_length = 1000, null = True)
+	notes = models.TextField(max_length = 1000, null = True)
+	ne = 'ne'
+	nw = 'nw'
+	se = 'se'
+	sw = 'sw'
+	location_choices = (
+		(ne, _('North East')),
+		(nw , _('North West')),
+		(se , _('South East')),
+		(sw , _('South West')),
+	)
+	location = models.CharField(choices = location_choices, max_length = 5)
 	
+def update_user_profile(sender, instance, created, **kwargs):
+	if created:
+		Player.objects.create(user=instance)
+	instance.profile.save()
+class Oasis(models.Model):
+	location_latitude = models.IntegerField() # Because every oasis need co-ordinates
+	location_longitude = models.IntegerField() # And two of them
+	bonus_1 = models.IntegerField() # First bonus
+	bonus_2 = models.IntegerField(null = True) # And possibly the seconday one
+	army = models.ManyToManyField(Army)
+	owner = models.ForeignKey(Player, null = True)
+		
 class Message(models.Model):
 	sender = models.ForeignKey(Player, related_name="Sender")
 	recipent = models.ForeignKey(Player, related_name="Recipent")

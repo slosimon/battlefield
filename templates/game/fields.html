@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<span class="fa-stack fa-3x">
+  <i class="fa fa-circle fa-stack-2x"></i>
+  <strong class="fa-stack-1x text-primary">1</strong>
+</span>
+    <section id="portfolio">
+        <div class="container">
+            <div class="row">   
+                <div class="portfolio-items">
+					{% for field in user.village.fields %}
+                    <div class="col-xs-6 col-sm-6 col-md-2 portfolio-item branded logos">
+                        <div class="portfolio-wrapper">
+                            <div class="portfolio-single">
+                                <div class="portfolio-thumb">
+                                    <img src={% get_media_prefix %}"{{field.name|slugify}}" class="img-responsive" alt="{{field.name}}">
+                                </div>
+                                <div class="portfolio-view">
+                                    <ul class="nav nav-pills">
+                                        <li><a href="images/portfolio/1.jpg" data-lightbox="example-set"><i class="fa fa-upload"></i></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="portfolio-info ">
+                                <h2>{{ field.name }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor%}
+                </div>
+                
+            </div>
+        </div>
+    </section>
+    <!--/#portfolio-->
+
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<section id="page-breadcrumb">
+        <div class="vertical-center sun">
+             <div class="container">
+                <div class="row">
+                    <div class="action">
+                        <div class="col-sm-12">
+							<center>
+                        <h2>Register</h2>
+                          <form method="post">
+							{% csrf_token %}
+							{% for field in form %}
+							  <p>
+								{{ field.label_tag }}<br>
+								{{ field }}
+								
+								{% for error in field.errors %}
+								  <p style="color: red">{{ error }}</p>
+								{% endfor %}
+							  </p>
+							{% endfor %}
+							<div class="wrapper_btn" style="">
+								<button type="submit" class="btn btn-common" style="margin: 0 auto;">Register</button>
+							</div>
+						  </form>
+						  </center>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        <div class="preloader"><i class="fa fa-sun-o fa-spin"></i></div>
+    </section>
+    <!--/#home-slider-->
+
+  
+
+{% endblock %}

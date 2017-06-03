@@ -37,10 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'nocaptcha_recaptcha',
     'world',
     'building',
     'troops',
     'hero',
+    
 ]
 
 MIDDLEWARE = [
@@ -54,7 +56,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'battlefield.urls'
-
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -136,3 +138,10 @@ MEDIA_ROOT = BASE_DIR+'/media/'
 MEDIAFILES_DIRS = ( os.path.join('media'), )
 
 SPEED = 10
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/fields/'
+
+NORECAPTCHA_SITE_KEY = "6LctJgoTAAAAACeyeLKfxpzFxW2RbSt77R5a0FdL"
+NORECAPTCHA_SECRET_KEY = "6LctJgoTAAAAAIQts0tu1N9w7BUx_p-Ea1r5BOtM"
+

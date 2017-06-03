@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 class Resources(models.Model):
 	oil = models.IntegerField(default = 750, verbose_name = _('Oil'))
 	iron = models.IntegerField(default = 750, verbose_name = _('Iron'))
-	coal = models.IntegerField(default = 750, verbose_name = _('Coal'))
+	wood = models.IntegerField(default = 750, verbose_name = _('Wood'))
 	food = models.IntegerField(default = 750, verbose_name = _('Food'))
 
 class Troops(models.Model):

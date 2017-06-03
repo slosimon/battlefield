@@ -13,7 +13,7 @@
     <link href="{% static 'css/lightbox.css'%}" rel="stylesheet"> 
 	<link href="{% static 'css/main.css'%}" rel="stylesheet">
 	<link href="{% static 'css/responsive.css'%}" rel="stylesheet">
-	<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
     <!--[if lt IE 9]>
 	    <script src="js/html5shiv.js"></script>
 	    <script src="js/respond.min.js"></script>
@@ -58,34 +58,27 @@
                 </div>
                 <div class="collapse navbar-collapse">
                     <ul class="nav navbar-nav navbar-right">
-                        <li class="active"><a href="/">Home</a></li>
-                        <li class="dropdown"><a href="#">Pages <i class="fa fa-angle-down"></i></a>
+                        <li><a href="/fields/">Fields</a></li>
+                        <li><a href="/center/">Center </a></li>                    
+                        <li class="dropdown"><a href="#">Statistics <i class="fa fa-angle-down"></i></a>
                             <ul role="menu" class="sub-menu">
-                                <li><a href="/about/">About the game</a></li>
-                                <!--<li><a href="/tutorial/">Tutorial</a></li>
-                                <li><a href="/developers/">Developers</a></li>-->
-                                <li><a href="/pricing/">Pricing</a></li>
-                                <li><a href="/sponsors/">Sponsors</a></li>
-                                <li><a href="/private/">Private server</a></li>
+                                <li><a href="/pop_ranking/">Population ranking</a></li>
+                                <li><a href="/attack_ranking/">Attack ranking</a></li>
+                                <li><a href="/defense_ranking/">Defense ranking</a></li>
+                                <li><a href="/weekly/">Weekly statistics</a></li>
+                                <li><a href="/ally_ranking/">Alliance ranking</a></li>
+                                <li><a href="/ally_attack_ranking/">Alliance attack ranking</a></li>
+                                <li><a href="/ally_defense_ranking/">Alliance defense ranking</a></li>
+                                <li><a href="/ally_weekly/">Alliance weekly statistics</a></li>
+                                <li><a href="/hero/">Hero</a></li>
+                                <li><a href="/nuke/">Nuke</a></li>
                             </ul>
-                        </li>                    
-                        <li class="dropdown"><a href="portfolio.html">Data <i class="fa fa-angle-down"></i></a>
-                            <ul role="menu" class="sub-menu">
-                                <li><a href="portfolio.html">Tribes</a></li>
-                                <li><a href="portfoliofour.html">Buildings</a></li>
-                                <li><a href="portfolioone.html">Troops</a></li>
-                                <li><a href="portfoliotwo.html">Artifacts</a></li>
-                            </ul>
-                        </li>                                           
+                        </li>
+                        <li><a href="/map/">Map</a></li>
+                        <li><a href="/reports/">Reports</a></li>
+                        <li><a href="/messages/">Messages</a></li>
+                        <li><a href="/gold/">Gold</a></li>                                            
                     </ul>
-                </div>
-                <div class="search">
-                    <form role="form">
-                        <i class="fa fa-search"></i>
-                        <div class="field-toggle">
-                            <input type="text" class="search-form" autocomplete="off" placeholder="Search">
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>

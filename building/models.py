@@ -10,14 +10,14 @@ class Cost(models.Model):
 	time = models.TimeField()
 	oil = models.IntegerField()
 	iron = models.IntegerField()
-	coal = models.IntegerField()
+	wood = models.IntegerField()
 	food = models.IntegerField()
 	cost = models.IntegerField()
 	culture_points = models.IntegerField()
 	bonus = models.IntegerField()
 
 class Building(models.Model):
-	cost = models.ForeignKey(Cost)
+	cost = models.ManyToManyField(Cost)
 	parliament = 'Parliament'
 	summer_residence = 'Summer residence' 
 	town_hall = 'Town hall' 
@@ -80,8 +80,25 @@ class Building(models.Model):
 		# bonus buildings for each nation
 	)
 	name = models.CharField(max_length = 50, choices = options)
-	image = models.ImageField()
+	image = models.ImageField(null = True)
 	description = models.TextField(max_length = 1000)
 	def __unicode__(self):
 		return unicode(self.name)
 	
+class Field(models.Model):
+	oil_field ='Oil field'
+	forrest='Forrest'
+	iron_mine ='Iron mine'
+	farm ='Farm'
+	options = (
+		(oil_field , _('Oil field')),
+		(forrest , _('Forrest')),
+		(iron_mine , _('Iron mine')),
+		(farm , _('Farm')),
+	)
+	name = models.CharField(max_length = 50)
+	image = models.ImageField(null = True)
+	description = models.TextField(max_length = 1000)
+	cost = models.ManyToManyField(Cost)
+	def __unicode__(self):
+		return unicode(self.name)
