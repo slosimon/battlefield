@@ -15,6 +15,7 @@ class Cost(models.Model):
 	cost = models.IntegerField()
 	culture_points = models.IntegerField()
 	bonus = models.IntegerField()
+	level = models.IntegerField()
 
 class Building(models.Model):
 	cost = models.ManyToManyField(Cost)
@@ -48,14 +49,14 @@ class Building(models.Model):
 	can_filling_centre = 'Can filling centre'
 	nuke = 'Nuke research lab'
 	options = (
-		(parliament , _('Parliament')), # Palace
-		(summer_residence , _('Summer residence')), # Residence
-		(town_hall, _('Town hall')),
-		(headquarters , _('Headquarters')), # Main building
-		(shelter , _('Shelter')), # Cranny
-		(warehouse , _('Warehouse')), # Warehouse
-		(silo , _('Silo')), # Granary
-		(uni , _('University')), # Academy
+		(parliament , _('Parliament')), # Palace, done
+		(summer_residence , _('Summer residence')), # Residence, done
+		(town_hall, _('Town hall')), # done
+		(headquarters , _('Headquarters')), # Main building, done
+		(shelter , _('Shelter')), # Cranny, done
+		(warehouse , _('Warehouse')), # Warehouse,done
+		(silo , _('Silo')), # Granary, done
+		(uni , _('University')), # Academy, done
 		(market , _('Market')), # Marketplace
 		(camp , _('Training camp')), # Barracks
 		(ammunition , _('Ammunition workshop')), # Armoury/Smithy

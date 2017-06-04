@@ -144,5 +144,10 @@ def map_init():
 				oasis.army.add(Army.objects.get(id = army.id))
 				oasis.save()
 				continue
+				
+def fields_init():
+	
+	
+def buildings_init():
 			
 				
