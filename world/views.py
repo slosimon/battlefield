@@ -15,7 +15,7 @@ import urllib
 import urllib2
 from django.contrib import messages
 from django.conf import settings
-from world.initialize_model import map_init, tribe_init
+from world.initialize_model import map_init, tribe_init, buildings_init, fields_init
 from world.functions import *
 from django.contrib.admin.views.decorators import staff_member_required
 from datetime import datetime
@@ -25,9 +25,8 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def fields(request):
 	user = request.user
-	village = user.last_village
-	
-	return render(request, 'game/fields.html', {user: 'user'})
+	player = Player.objects.get(user = user)	
+	return render(request, 'game/fields.html', {player: 'user'})
 	
 
 def register(request):
@@ -46,7 +45,7 @@ def register(request):
 			player.user = User.objects.get(id = u_id)
 			player.name = form.cleaned_data.get('username')
 			player.hero = Hero.objects.get(id = hero_id)
-			player.tribe = Tribe.objects.get(id = form.cleaned_data.get('select_tribe'))
+			player.tribe = Tribe.objects.get(name = form.cleaned_data.get('select_tribe'))
 			bonus = Bonus()
 			bonus.gold_club = False
 			bonus.save()
@@ -120,5 +119,7 @@ def login(request):
 @staff_member_required
 def init_map(request):
 	map_init()
+	buildings_init()
 	tribe_init()
+	fields_init()
 	return redirect('/')

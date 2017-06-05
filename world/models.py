@@ -33,8 +33,7 @@ class Tribe(models.Model):
 class Building(models.Model):
 	building = models.ForeignKey('building.Building', null = True)
 	lvl = models.IntegerField(default = 0)
-	def __unicode__(self):
-		return unicode(self.name)	
+	
 		
 class Center(models.Model):
 	pos_01 = models.ForeignKey(Building, default = None, null = True, related_name="Typeone")

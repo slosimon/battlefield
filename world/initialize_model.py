@@ -2,7 +2,11 @@
 
 from models import *
 from random import randint
-
+import csv
+from slugify import slugify
+import building.models 
+from datetime import time
+from django.conf import settings
 
 def village_init():
 	a = [4,4,4,6] # 1 - 10
@@ -40,9 +44,9 @@ def tribe_init():
 	
 def map_init():
 	village_init()
-	for i in range (-50,51):
+	for i in range (-10,11):
 		print(i)
-		for j in range (-50, 51):
+		for j in range (-10, 11):
 			num = randint(1,20)
 			if num < 14:
 				typ = randint(1,55)
@@ -144,10 +148,79 @@ def map_init():
 				oasis.army.add(Army.objects.get(id = army.id))
 				oasis.save()
 				continue
+
+def myround(x):
+    return int(5 * round(float(x)/5))
 				
 def fields_init():
-	
+	fields = ['Oil field','Forrest','Iron mine','Farm']
+	for item in fields:
+		field = building.models.Field()
+		field.name = str(item)
+		try:
+			field.image = 'init/img/fields/'+slugify(build)+'.png'
+		except Exception:
+			pass
+		try:
+			field.description = 'init/descriptions/fields/'+slugify(build)+'.txt'
+		except Exception:
+			pass
+		field.save()
+		print('init/'+slugify(str(field))+'.csv')
+		with open('init/'+slugify(str(field))+'.csv', 'rb') as fin:
+			spamreader = csv.reader(fin, delimiter=' ', quotechar='|')
+			for lvl in spamreader:
+				row = lvl[0].split(',')
+				price = building.models.Cost()
+				row[9] = float(row[9])
+				price.days = row[9]//(3600*24)
+				price.time = time(int(row[9]/3600)%24, int((row[9]%3600)/60), int((row[9]%60)), 0)
+				price.oil = myround(row[2])
+				price.iron = myround(row[3])
+				price.wood = myround(row[4])
+				price.food = myround(row[5])
+				price.cost = int(row[6])
+				price.culture_points = int(row[7])
+				price.bonus = row[8]
+				price.level = int(row[0])
+				price.save()
+				field.cost.add(price)
+		field.save()
+	return 0
 	
 def buildings_init():
-			
-				
+	buildings = ['Parliament','Summer residence' ,'Town hall' ,'Headquarters' ,'Shelter' ,'Warehouse' ,'Silo' ,'University','Market','Training camp','Ammunition workshop' ,'Hangar','Railway' ,'Port' ,'Artilery mansion' ,"Hero's birth house",'Hideout' ,'Large warehouse','Large silo','Large camp','Large hangar','Bunker','Defensive line','Oil refinery','Iron works','Sawmill' ,'Slaughter house' ,'Can filling centre','Nuke research lab','Bazar']
+	for build in buildings:
+		bui = building.models.Building()
+		bui.name = str(build)
+		try:
+			bui.image = 'init/img/buildings/'+slugify(build)+'.png'
+		except Exception:
+			pass
+		try:
+			bui.description = 'init/descriptions/buildings/'+slugify(build)+'.txt'
+		except Exception:
+			pass
+		bui.save()
+		print('init/'+slugify(str(build))+'.csv')
+		with open('init/'+slugify(str(build))+'.csv', 'rb') as fin:
+			spamreader = csv.reader(fin, delimiter=' ', quotechar='|')
+			for lvl in spamreader:
+				row = lvl[0].split(',')
+				price = building.models.Cost()
+				row[9] = float(row[9])
+				price.days = row[9]//(3600*24)
+				price.time = time(int(row[9]/3600)%24, int((row[9]%3600)/60), int((row[9]%60)), 0)
+				price.oil = myround(row[2])
+				price.iron = myround(row[3])
+				price.wood = myround(row[4])
+				price.food = myround(row[5])
+				price.cost = int(row[6])
+				price.culture_points = int(row[7])
+				price.bonus = row[8]
+				price.level = int(row[0])
+				price.save()
+				bui.cost.add(price)
+		bui.save()
+	return 0
+

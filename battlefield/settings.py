@@ -82,15 +82,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'battlefield.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
 
 
 # Password validation
@@ -142,6 +134,7 @@ SPEED = 10
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/fields/'
 
-NORECAPTCHA_SITE_KEY = "6LctJgoTAAAAACeyeLKfxpzFxW2RbSt77R5a0FdL"
-NORECAPTCHA_SECRET_KEY = "6LctJgoTAAAAAIQts0tu1N9w7BUx_p-Ea1r5BOtM"
-
+try:
+    from local_settings import *
+except ImportError:
+    pass
