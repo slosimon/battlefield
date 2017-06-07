@@ -37,12 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'django.contrib.flatpages',
     'nocaptcha_recaptcha',
     'world',
     'building',
     'troops',
     'hero',
-    
 ]
 
 MIDDLEWARE = [
@@ -130,7 +131,7 @@ MEDIA_ROOT = BASE_DIR+'/media/'
 MEDIAFILES_DIRS = ( os.path.join('media'), )
 
 SPEED = 10
-
+MAP_SIZE = 10
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/fields/'
 

@@ -18,8 +18,12 @@ from django.contrib import admin
 from django.conf import settings
 from home import views as views_home
 from django.conf.urls.static import static
-from world import views as world_views
+from world import init_views as world_views
+from world import views as main_views 
 from django.contrib.auth import views as auth_views 
+from world import update
+from threading import Thread
+#from djutils.decorators import async
 
 urlpatterns = [
 	url(r'^$', views_home.index, name = 'index'), #Works
@@ -31,10 +35,22 @@ urlpatterns = [
 	url(r'^private/$', views_home.private, name = 'private'), #Create template
 	url(r'^register/$', world_views.register, name = 'register'), # Add mail
 	url(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',world_views.activate, name='activate'), #Works
-	url(r'^login/$', auth_views.login, {'template_name': 'game/login.html'}, name='login'),
-	url(r'^fields/$', world_views.fields, name = 'fields'),
-	url(r'^map_init/$', world_views.init_map, name = 'map_init'),
+	url(r'^login/$', auth_views.login, {'template_name': 'game/login.html'}, name='login'), #Works
+	url(r'^fields/$', main_views.fields, name = 'fields'), # Works
+	url(r'^center/$', main_views.center, name = 'center'), # Works
+	url(r'^pop_ranking/$', main_views.pop_ranking, name = 'population ranking'), #Works
+	url(r'^attack_ranking/$', main_views.attack_ranking, name = 'attack ranking'), #Works
+	url(r'^defense_ranking/$', main_views.def_ranking, name = 'def ranking'), #Works
+	url(r'^weekly/$', main_views.weekly_ranking, name = 'weekly ranking'), # Works
+	url(r'^fields/(?P<pos>[0-9o-s_]+)/$', main_views.field, name = 'field'),
+	url(r'^fields/(?P<pos>[0-9o-s_]+)/upgrade/$', main_views.upgrade_field, name = 'upfield'),
+	url(r'^map_init/$', world_views.init_map, name = 'map_init'), #Works
     url(r'^admin/', admin.site.urls),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler404='battlefield.views.handler404'
+
+#@async
+t = Thread(target = update.queue, args = (), kwargs = {})
+t.setDaemon(True)
+t.start()

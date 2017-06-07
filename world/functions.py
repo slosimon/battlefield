@@ -3,6 +3,7 @@
 from models import *
 from building.models import Building as Bbuilding
 from building.models import Field as Bfield
+from django.conf import settings
 
 def village_start(village):
 	buildings = Bbuilding.objects.get(name = 'Headquarters')
@@ -10,7 +11,7 @@ def village_start(village):
 	build.building = buildings
 	build.lvl = 1
 	build.save()
-	center = Center()
+	center = Center() 
 	center.pos_01 = build
 	center.save()
 	village.center = center
@@ -23,6 +24,7 @@ def village_start(village):
 		fields.append('Forrest')
 	for i in range (village.typ.farm):
 		fields.append('Farm')
+	
 	field1 = Field.objects.create(name = Bfield.objects.get(name = fields[0]), lvl = 0)
 	field2 = Field.objects.create(name = Bfield.objects.get(name = fields[1]), lvl = 0)
 	field3 = Field.objects.create(name = Bfield.objects.get(name = fields[2]), lvl = 0)
@@ -41,7 +43,8 @@ def village_start(village):
 	field16 = Field.objects.create(name = Bfield.objects.get(name = fields[15]), lvl = 0)
 	field17 = Field.objects.create(name = Bfield.objects.get(name = fields[16]), lvl = 0)
 	field18 = Field.objects.create(name = Bfield.objects.get(name = fields[17]), lvl = 0)
-	fields = Fields.objects.create(pos_01 = field1, pos_02 = field2, pos_03 = field3, pos_04 = field4, pos_05 = field5, pos_06 = field6, pos_07 = field7, pos_08 = field8, pos_09 = field9, pos_10 = field10, pos_11 = field11, pos_12 = field12, pos_13 = field13, pos_14 = field14, pos_15 = field15, pos_16 = field16, pos_17 = field17, pos_18 = field18)
+	a = Fields.objects.create(pos_01 = field1, pos_02 = field2, pos_03 = field3, pos_04 = field4, pos_05 = field5, pos_06 = field6, pos_07 = field7, pos_08 = field8, pos_09 = field9, pos_10 = field10, pos_11 = field11, pos_12 = field12, pos_13 = field13, pos_14 = field14, pos_15 = field15, pos_16 = field16, pos_17 = field17, pos_18 = field18)
+	village.fields = a
 	army = Army()
 	troops = Troops()
 	troops.count = 0
@@ -105,7 +108,7 @@ def village_start(village):
 	resources.save()
 	village.resources = resources
 	village.update = datetime.now()
-	production = Resources.objects.create(oil = 10, iron = 10, wood = 10, food = 20)
+	production = Resources.objects.create(oil = 2 * typ.oil_field * settings.SPEED, iron = 2 * typ.oil_field * settings.SPEED, wood = 2 * typ.oil_field * settings.SPEED, food = 2 * typ.oil_field * settings.SPEED)
 	production.save()
 	village.production = production
 	village.save()

@@ -1,0 +1,31 @@
+{% extends 'base_game.html' %}
+{% load static %}
+{% block content %}
+
+     <section id="coming-soon">        
+         <div class="container">
+            <div class="row">
+                <div class="col-sm-8 col-sm-offset-2">                    
+                    <div class="text-center coming-content">
+                        <h1>Largest players</h1>
+                        <table style="width:100%">
+							<tr>
+								{%for text in bar %}
+								<th><h2>{{text}}</h2></th>
+								{% endfor %}
+							</tr>
+							{% for user in users %}
+								<tr>
+									<th><a href="/profile/{{user.id}}/">{{user.user.username}}</a></th>
+									<th>{{user.villages.all.count}}</th>
+									<th>{{user.tribe}}</th>
+									<th>{{user.attack_points}}</th>
+								</tr>
+							{% endfor %}
+						</table>
+                    </div>                    
+                </div>
+            </div>
+        </div>       
+    </section>
+ {% endblock %}

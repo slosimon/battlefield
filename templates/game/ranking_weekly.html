@@ -1,0 +1,67 @@
+{% extends 'base_game.html' %}
+{% load static %}
+{% load negative %}
+{% block content %}
+
+     <section id="coming-soon">        
+         <div class="container">
+            <div class="row">
+                <div class="col-sm-8 col-sm-offset-2">                    
+                    <div class="text-center coming-content">
+                        <h1>Best players this week</h1>
+                        <table style="width:100%">
+							<tr>
+								<th><h2>Player</h2></th>
+								<th><h2>Attacking points</h2></th>
+								<th></th>
+								<th><h2>Player</h2></th>
+								<th><h2>Defensive points</h2></th>
+							</tr>
+							{% for a,b in one %}
+								<tr>
+									<th><a href="/profile/{{a.id}}/">{{a.user.username}}</a></th>
+									<th>{{a.old_att|negate|add:a.attack_points}}</th>
+									<th></th>
+									<th><a href="/profile/{{b.id}}/">{{b.user.username}}</a></th>
+									<th>{{b.old_def|negate|add:b.def_points}}</th>
+								</tr>
+							{% endfor %}
+							<tr>
+									<th><a href="/profile/{{user.id}}/">{{user.user.username}}</a></th>
+									<th>{{user.old_att|negate|add:user.attack_points}}</th>
+									<th></th>
+									<th><a href="/profile/{{user.id}}/">{{user.user.username}}</a></th>
+									<th>{{user.old_def|negate|add:user.def_points}}</th>
+								</tr>
+						</table>
+						<table style="width:100%">
+							<tr>
+								<th><h2>Player</h2></th>
+								<th><h2>New population</h2></th>
+								<th></th>
+								<th><h2>Player</h2></th>
+								<th><h2>Resources robbed</h2></th>
+							</tr>
+							{% for a,b in two %}
+								<tr>
+									<th><a href="/profile/{{a.id}}/">{{a.user.username}}</a></th>
+									<th>{{a.old_rank|negate|add:a.population}}</th>
+									<th></th>
+									<th><a href="/profile/{{b.id}}/">{{b.user.username}}</a></th>
+									<th>{{b.raided}}</th>
+								</tr>
+							{% endfor %}
+							<tr>
+									<th><a href="/profile/{{user.id}}/">{{user.user.username}}</a></th>
+									<th>{{user.old_rank|negate|add:user.population}}</th>
+									<th></th>
+									<th><a href="/profile/{{user.id}}/">{{user.user.username}}</a></th>
+									<th>{{user.raided}}</th>
+								</tr>
+						</table>
+                    </div>                    
+                </div>
+            </div>
+        </div>       
+    </section>
+ {% endblock %}

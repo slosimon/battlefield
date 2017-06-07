@@ -44,9 +44,9 @@ def tribe_init():
 	
 def map_init():
 	village_init()
-	for i in range (-10,11):
+	for i in range (-1 * settings.MAP_SIZE,settings.MAP_SIZE +1):
 		print(i)
-		for j in range (-10, 11):
+		for j in range (-1 * settings.MAP_SIZE,settings.MAP_SIZE +1):
 			num = randint(1,20)
 			if num < 14:
 				typ = randint(1,55)
@@ -173,6 +173,7 @@ def fields_init():
 				row = lvl[0].split(',')
 				price = building.models.Cost()
 				row[9] = float(row[9])
+				row[9] = row[9] / settings.SPEED
 				price.days = row[9]//(3600*24)
 				price.time = time(int(row[9]/3600)%24, int((row[9]%3600)/60), int((row[9]%60)), 0)
 				price.oil = myround(row[2])
@@ -181,7 +182,7 @@ def fields_init():
 				price.food = myround(row[5])
 				price.cost = int(row[6])
 				price.culture_points = int(row[7])
-				price.bonus = row[8]
+				price.bonus = int(row[8])* settings.SPEED
 				price.level = int(row[0])
 				price.save()
 				field.cost.add(price)
@@ -209,6 +210,7 @@ def buildings_init():
 				row = lvl[0].split(',')
 				price = building.models.Cost()
 				row[9] = float(row[9])
+				row[9] = row[9] / settings.SPEED
 				price.days = row[9]//(3600*24)
 				price.time = time(int(row[9]/3600)%24, int((row[9]%3600)/60), int((row[9]%60)), 0)
 				price.oil = myround(row[2])

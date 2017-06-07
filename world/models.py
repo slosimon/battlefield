@@ -64,8 +64,7 @@ class Center(models.Model):
 class Field(models.Model):
 	name = models.ForeignKey('building.Field', null = True)
 	lvl = models.IntegerField(default = 0)
-	def __unicode__(self):
-		return unicode(self.name)
+
 		
 class VillageType(models.Model):
 	oil_field = models.IntegerField()
@@ -117,172 +116,22 @@ class Army(models.Model):
 	hero = models.BooleanField(default = True)
 	
 class Resources(models.Model):
-	oil = models.IntegerField(default = 750, verbose_name = _('Oil'))
-	iron = models.IntegerField(default = 750, verbose_name = _('Iron'))
-	wood = models.IntegerField(default = 750, verbose_name = _('Wood'))
-	food = models.IntegerField(default = 750, verbose_name = _('Food'))
+	oil = models.FloatField(default = 750, verbose_name = _('Oil'))
+	iron = models.FloatField(default = 750, verbose_name = _('Iron'))
+	wood = models.FloatField(default = 750, verbose_name = _('Wood'))
+	food = models.FloatField(default = 750, verbose_name = _('Food'))
 	
+class FieldQueue(models.Model):
+	field = models.ForeignKey(Field)
+	to = models.IntegerField()
+	start = models.DateTimeField(null = True, default = None)
+	end = models.DateTimeField()
 	
-class Village(models.Model):
-	typ = models.ForeignKey(VillageType)
-	name = models.CharField(max_length = 26, null = True)
-	center = models.ForeignKey(Center, null = True) # Because every village needs it center
-	fields = models.ForeignKey(Fields, null = True) # Because every village need resource fields
-	location_latitude = models.IntegerField(null = True) # Because every village need co-ordinates
-	location_longitude = models.IntegerField(null = True) # And two of them
-	population = models.IntegerField(default = 0) # Every village should also have some inhabitants
-	army = models.ForeignKey(Army, null = True) # And troops
-	capital = models.BooleanField(default = True)
-	resources = models.ForeignKey(Resources, related_name = "Resources", null = True)
-	update = models.DateTimeField(default = datetime.now(), verbose_name = _('Last update time'), null = True)
-	culture_points = models.IntegerField(default = 0)
-	storage_capacity = models.IntegerField(default = 800)
-	food_capacity = models.IntegerField(default = 800)
-	production = models.ForeignKey(Resources, related_name = "Production", null = True)
-	reinforcements = models.ManyToManyField(Army, related_name="reinforcements", null = True)
-
-class Update_negative(models.Model):
-	empty_time = models.DateTimeField()
-	village = models.ForeignKey(Village)
-	
-class Hero(models.Model):
-	name = models.CharField(max_length = 50, verbose_name=_('Name')) # There are no name heroes
-	experience = models.IntegerField(verbose_name = _('Hero experience'), default = 0) # And hero might get stronger after some battle
-	level = models.IntegerField(verbose_name = _('Hero level'), default = 0) # And his level goes higher
-	health = models.IntegerField(verbose_name=_('Health'), default = 100) # And needs to be alive
-	strength = models.IntegerField(verbose_name = _('Hero strength'), default = 100) # It also have more than initial strength
-	attack_bonus = models.IntegerField(verbose_name = _('Attack bonus '), default = 0) # Here comes the attack bonus
-	defense_bonus = models.IntegerField(verbose_name = _('Defense bonus '), default = 0) # And defense bonus
-	gold_bonus = models.IntegerField(verbose_name = _('Gold bonus'), default = 0)
-	resources = models.IntegerField(verbose_name = _('Resource bonus'), default = 0) # And can also increase village produciton
-	
-class Bonus(models.Model):
-	gold_club = models.BooleanField(verbose_name = _('Gold club'), default = False)
-	plus_account = models.DateTimeField(verbose_name = _('Plus Account'), default = datetime.now())	
-	oil_bonus_production = models.DateTimeField(verbose_name = _('Oil bonus production'), default = datetime.now())	
-	iron_bonus_production = models.DateTimeField(verbose_name = _('Iron bonus production'), default = datetime.now())	
-	coal_bonus_production = models.DateTimeField(verbose_name = _('Coal bonus production'), default = datetime.now())
-	food_bonus_production = models.DateTimeField(verbose_name = _('Food bonus production'), default = datetime.now())	
-
-class Defender(models.Model):
-	army = models.ForeignKey(Army)
-	village = models.ForeignKey(Village)
-	
-class Attack(models.Model):
-	reinforcement = 'Reinforcement'
-	full_attack = 'Full attack'
-	raid = 'Raid'
-	options = (
-		(reinforcement , _('Reinforcement')),
-		(full_attack , _('Full attack')),
-		(raid , _('Raid')),
-	)
-	attack_type = models.CharField(max_length = 25, choices=options)
-	def __unicode__(self):
-		return unicode(self.attack_type)
-        
-class Report(models.Model):
-	attacker_village = models.ForeignKey(Village)
-	attacker_army = models.ForeignKey(Army)
-	defenders = models.ManyToManyField(Defender)
-	attack_type = models.ForeignKey(Attack)
-	read = models.BooleanField()
-	time_stamp = models.DateTimeField()
-	
-class Scouting(models.Model):
-	attacker_village = models.ForeignKey(Village)
-	attacker_army = models.ForeignKey(Army)
-	defenders = models.ManyToManyField(Defender)
-	read = models.BooleanField()
-	time_stamp = models.DateTimeField()
-
-class Trading_resources(models.Model):
-	oil = models.IntegerField()
-	iron = models.IntegerField()
-	coal = models.IntegerField()
-	food = models.IntegerField()
-		
-class Trading(models.Model):
-	sender = models.ForeignKey(Village, related_name = "Sender")
-	recipent = models.ForeignKey(Village, related_name = "Recipent")
-	quantity = models.ForeignKey(Trading_resources)
-	time_stamp = models.DateTimeField()
-	
-class Medals(models.Model):
-	att = 'Attack'
-	defe = 'Defense'
-	rai = 'Raiding'
-	climb = 'Climber'
-	options = (
-		(att, _('%d. attacker of the week %d')),
-		(defe, _('%d. defender of the week  %d')),
-		(rai, _('%d. robber of the week %d')),
-		(climb, _('%d. climber of the week %d')),
-	)
-	pos = models.IntegerField()
-	week = models.IntegerField()
-	medal = models.CharField(max_length = 10, choices = options)
-	image = models.ImageField()
-	
-class Player(models.Model):
-	user = models.OneToOneField(User, on_delete=models.CASCADE)
-	hero = models.ForeignKey(Hero)
-	villages = models.ManyToManyField(Village, null=True)
-	population = models.IntegerField(verbose_name = _('Population'), default = 2)
-	tribe = models.ForeignKey(Tribe)
-	gold = models.IntegerField(verbose_name = _('Gold'), default = 30)
-	bonuses = models.ForeignKey(Bonus)
-	reports = models.ManyToManyField(Report, null = True)
-	scouting_reports = models.ManyToManyField(Scouting, null = True)
-	market_reports = models.ManyToManyField(Trading, null = True)
-	sitter_1 = models.ForeignKey(User, related_name="first_sitter", default = None, null = True)
-	sitter_2 = models.ForeignKey(User, related_name="second_sitter", default = None, null = True)
-	last_login = models.DateTimeField(default = datetime.now())
-	artifact_holder = models.BooleanField(default = False)
-	culture_points = models.IntegerField(default = 0)
-	medals = models.ManyToManyField(Medals, null = True)
-	old_rank = models.IntegerField()
-	raided = models.IntegerField(default = 0)
-	attack_points = models.IntegerField(default = 0)
-	def_points = models.IntegerField(default = 0)
-	old_att = models.IntegerField(default = 0)
-	old_def = models.IntegerField(default = 0)
-	banned = models.BooleanField(default = False)
-	last_village = models.ForeignKey(Village, related_name = "last", null = True)
-	is_active = models.BooleanField(default = False)
-	activation_key = models.CharField(max_length = 25, null = True)
-	profile = models.TextField(max_length = 1000, null = True)
-	notes = models.TextField(max_length = 1000, null = True)
-	ne = 'ne'
-	nw = 'nw'
-	se = 'se'
-	sw = 'sw'
-	location_choices = (
-		(ne, _('North East')),
-		(nw , _('North West')),
-		(se , _('South East')),
-		(sw , _('South West')),
-	)
-	location = models.CharField(choices = location_choices, max_length = 5)
-	
-def update_user_profile(sender, instance, created, **kwargs):
-	if created:
-		Player.objects.create(user=instance)
-	instance.profile.save()
-class Oasis(models.Model):
-	location_latitude = models.IntegerField() # Because every oasis need co-ordinates
-	location_longitude = models.IntegerField() # And two of them
-	bonus_1 = models.IntegerField() # First bonus
-	bonus_2 = models.IntegerField(null = True) # And possibly the seconday one
-	army = models.ManyToManyField(Army)
-	owner = models.ForeignKey(Player, null = True)
-		
-class Message(models.Model):
-	sender = models.ForeignKey(Player, related_name="Sender")
-	recipent = models.ForeignKey(Player, related_name="Recipent")
-	content = models.TextField(max_length = 10**10)
-	subject = models.CharField(max_length = 255)
-	read = models.BooleanField()
+class BuildingQueue(models.Model):
+	building = models.ForeignKey(Building)
+	to = models.IntegerField()
+	start = models.DateTimeField(null = True, default = None)
+	end = models.DateTimeField()
 	
 class Troop_type(models.Model):
 	infantry = 'Infantry'
@@ -422,6 +271,7 @@ class Queue(models.Model):
 	quantity = models.IntegerField()
 	start_time = models.DateTimeField()
 	end_time = models.DateTimeField()
+	next_update = models.DateTimeField(default = datetime.now())
 	last_update = models.DateTimeField()
 	building_lvl = models.IntegerField()
 		
@@ -436,6 +286,173 @@ class Hangar(models.Model):
 	
 class Port(models.Model):
 	queue = models.ManyToManyField(Queue)
+	
+class Village(models.Model):
+	typ = models.ForeignKey(VillageType)
+	name = models.CharField(max_length = 26, null = True)
+	center = models.ForeignKey(Center, null = True) # Because every village needs it center
+	fields = models.ForeignKey(Fields, null = True) # Because every village need resource fields
+	location_latitude = models.IntegerField(null = True) # Because every village need co-ordinates
+	location_longitude = models.IntegerField(null = True) # And two of them
+	population = models.IntegerField(default = 0) # Every village should also have some inhabitants
+	army = models.ForeignKey(Army, null = True) # And troops
+	capital = models.BooleanField(default = True)
+	resources = models.ForeignKey(Resources, related_name = "Resources", null = True)
+	update = models.DateTimeField(default = datetime.now(), verbose_name = _('Last update time'), null = True)
+	culture_points = models.IntegerField(default = 0)
+	storage_capacity = models.IntegerField(default = 800)
+	food_capacity = models.IntegerField(default = 800)
+	production = models.ForeignKey(Resources, related_name = "Production", null = True)
+	reinforcements = models.ManyToManyField(Army, related_name="reinforcements", null = True)
+	field_1 = models.ForeignKey(FieldQueue,default = None, null = True)
+	field_2 = models.ForeignKey(FieldQueue, default = None, null = True, related_name = 'Secondary')
+	building_1 = models.ForeignKey(BuildingQueue, default = None, null = True)
+	building_2 = models.ForeignKey(BuildingQueue, default = None, null = True, related_name = 'Secondary')
+	next_update = models.DateTimeField(default = None, null = True) 
+
+class Update_negative(models.Model):
+	empty_time = models.DateTimeField()
+	village = models.ForeignKey(Village)
+	
+class Hero(models.Model):
+	name = models.CharField(max_length = 50, verbose_name=_('Name')) # There are no name heroes
+	experience = models.IntegerField(verbose_name = _('Hero experience'), default = 0) # And hero might get stronger after some battle
+	level = models.IntegerField(verbose_name = _('Hero level'), default = 0) # And his level goes higher
+	health = models.IntegerField(verbose_name=_('Health'), default = 100) # And needs to be alive
+	strength = models.IntegerField(verbose_name = _('Hero strength'), default = 100) # It also have more than initial strength
+	attack_bonus = models.IntegerField(verbose_name = _('Attack bonus '), default = 0) # Here comes the attack bonus
+	defense_bonus = models.IntegerField(verbose_name = _('Defense bonus '), default = 0) # And defense bonus
+	gold_bonus = models.IntegerField(verbose_name = _('Gold bonus'), default = 0)
+	resources = models.IntegerField(verbose_name = _('Resource bonus'), default = 0) # And can also increase village produciton
+	
+class Bonus(models.Model):
+	gold_club = models.BooleanField(verbose_name = _('Gold club'), default = False)
+	plus_account = models.DateTimeField(verbose_name = _('Plus Account'), default = datetime.now())	
+	oil_bonus_production = models.DateTimeField(verbose_name = _('Oil bonus production'), default = datetime.now())	
+	iron_bonus_production = models.DateTimeField(verbose_name = _('Iron bonus production'), default = datetime.now())	
+	coal_bonus_production = models.DateTimeField(verbose_name = _('Coal bonus production'), default = datetime.now())
+	food_bonus_production = models.DateTimeField(verbose_name = _('Food bonus production'), default = datetime.now())	
+
+class Defender(models.Model):
+	army = models.ForeignKey(Army)
+	village = models.ForeignKey(Village)
+	
+class Attack(models.Model):
+	reinforcement = 'Reinforcement'
+	full_attack = 'Full attack'
+	raid = 'Raid'
+	options = (
+		(reinforcement , _('Reinforcement')),
+		(full_attack , _('Full attack')),
+		(raid , _('Raid')),
+	)
+	attack_type = models.CharField(max_length = 25, choices=options)
+	def __unicode__(self):
+		return unicode(self.attack_type)
+        
+class Report(models.Model):
+	attacker_village = models.ForeignKey(Village)
+	attacker_army = models.ForeignKey(Army)
+	defenders = models.ManyToManyField(Defender)
+	attack_type = models.ForeignKey(Attack)
+	read = models.BooleanField()
+	time_stamp = models.DateTimeField()
+	
+class Scouting(models.Model):
+	attacker_village = models.ForeignKey(Village)
+	attacker_army = models.ForeignKey(Army)
+	defenders = models.ManyToManyField(Defender)
+	read = models.BooleanField()
+	time_stamp = models.DateTimeField()
+
+class Trading_resources(models.Model):
+	oil = models.IntegerField()
+	iron = models.IntegerField()
+	coal = models.IntegerField()
+	food = models.IntegerField()
+		
+class Trading(models.Model):
+	sender = models.ForeignKey(Village, related_name = "Sender")
+	recipent = models.ForeignKey(Village, related_name = "Recipent")
+	quantity = models.ForeignKey(Trading_resources)
+	time_stamp = models.DateTimeField()
+	
+class Medals(models.Model):
+	att = 'Attack'
+	defe = 'Defense'
+	rai = 'Raiding'
+	climb = 'Climber'
+	options = (
+		(att, _('%d. attacker of the week %d')),
+		(defe, _('%d. defender of the week  %d')),
+		(rai, _('%d. robber of the week %d')),
+		(climb, _('%d. climber of the week %d')),
+	)
+	pos = models.IntegerField()
+	week = models.IntegerField()
+	medal = models.CharField(max_length = 10, choices = options)
+	image = models.ImageField()
+	
+class Player(models.Model):
+	user = models.OneToOneField(User, on_delete=models.CASCADE)
+	hero = models.ForeignKey(Hero)
+	villages = models.ManyToManyField(Village, null=True)
+	population = models.IntegerField(verbose_name = _('Population'), default = 2)
+	tribe = models.ForeignKey(Tribe)
+	gold = models.IntegerField(verbose_name = _('Gold'), default = 30)
+	bonuses = models.ForeignKey(Bonus)
+	reports = models.ManyToManyField(Report, null = True)
+	scouting_reports = models.ManyToManyField(Scouting, null = True)
+	market_reports = models.ManyToManyField(Trading, null = True)
+	sitter_1 = models.ForeignKey(User, related_name="first_sitter", default = None, null = True)
+	sitter_2 = models.ForeignKey(User, related_name="second_sitter", default = None, null = True)
+	last_login = models.DateTimeField(default = datetime.now())
+	artifact_holder = models.BooleanField(default = False)
+	culture_points = models.IntegerField(default = 0)
+	medals = models.ManyToManyField(Medals, null = True)
+	old_rank = models.IntegerField()
+	raided = models.IntegerField(default = 0)
+	attack_points = models.IntegerField(default = 0)
+	def_points = models.IntegerField(default = 0)
+	old_att = models.IntegerField(default = 0)
+	old_def = models.IntegerField(default = 0)
+	banned = models.BooleanField(default = False)
+	last_village = models.ForeignKey(Village, related_name = "last", null = True)
+	is_active = models.BooleanField(default = False)
+	activation_key = models.CharField(max_length = 25, null = True)
+	profile = models.TextField(max_length = 1000, null = True)
+	notes = models.TextField(max_length = 1000, null = True)
+	ne = 'ne'
+	nw = 'nw'
+	se = 'se'
+	sw = 'sw'
+	location_choices = (
+		(ne, _('North East')),
+		(nw , _('North West')),
+		(se , _('South East')),
+		(sw , _('South West')),
+	)
+	location = models.CharField(choices = location_choices, max_length = 5)
+	next_update = models.DateTimeField(default = None, null = True)
+	
+def update_user_profile(sender, instance, created, **kwargs):
+	if created:
+		Player.objects.create(user=instance)
+	instance.profile.save()
+class Oasis(models.Model):
+	location_latitude = models.IntegerField() # Because every oasis need co-ordinates
+	location_longitude = models.IntegerField() # And two of them
+	bonus_1 = models.IntegerField() # First bonus
+	bonus_2 = models.IntegerField(null = True) # And possibly the seconday one
+	army = models.ManyToManyField(Army)
+	owner = models.ForeignKey(Player, null = True)
+		
+class Message(models.Model):
+	sender = models.ForeignKey(Player, related_name="Sender")
+	recipent = models.ForeignKey(Player, related_name="Recipent")
+	content = models.TextField(max_length = 10**10)
+	subject = models.CharField(max_length = 255)
+	read = models.BooleanField()
 	
 class Ally_leadership(models.Model):
 	leader = models.ForeignKey(Player)

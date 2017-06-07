@@ -18,108 +18,254 @@ from django.conf import settings
 from world.initialize_model import map_init, tribe_init, buildings_init, fields_init
 from world.functions import *
 from django.contrib.admin.views.decorators import staff_member_required
-from datetime import datetime
+from datetime import datetime, timedelta
 import operator
 from django.contrib.auth.decorators import login_required
+from update import *
+from django.views.generic.list import ListView
+from django.utils.translation import ugettext_lazy as _
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.utils.timezone import utc
 
 @login_required
 def fields(request):
 	user = request.user
-	player = Player.objects.get(user = user)	
-	return render(request, 'game/fields.html', {player: 'user'})
+	player = Player.objects.get(user = user)
+	village_name = player.last_village.name
+	update_res(player.last_village)
+	resources = player.last_village.resources
+	warehouse = player.last_village.storage_capacity
+	silo = player.last_village.food_capacity
+	fields = ['pos_01', 'pos_02', 'pos_03', 'pos_04', 'pos_05', 'pos_06', 'pos_07', 'pos_08', 'pos_09', 'pos_10', 'pos_11', 'pos_12', 'pos_13', 'pos_14', 'pos_15', 'pos_16', 'pos_17', 'pos_18']
+	picture = []
+	lvl = []
+	name = []
+	polja = player.last_village.fields
+	for field in fields:
+		polje = getattr(polja,field)
+		name.append(polje.name.name)
+		lvl.append(polje.lvl)
+		try:
+			picture.append(polje.name.image.url)
+		except Exception:
+			picture.append('/media/init/img/buildings/none.png')
+	field = zip(fields,name,lvl,picture)
+	oil = int(float(resources.oil) / warehouse * 100)
+	iron = int(float(resources.iron) / warehouse * 100)
+	wood = int(float(resources.wood) / warehouse * 100)
+	food = int(float(resources.food) / silo * 100)
+	production = player.last_village.production
+	return render(request, 'game/fields.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production})
 	
-
-def register(request):
-	if request.method == 'POST':
-		form = SignUpForm(request.POST)
-		if form.is_valid():
-			user = form.save(commit = False)
-			user.is_active = True
-			user.save()
-			u_id = user.id
-			hero = Hero()
-			hero.name = form.cleaned_data.get('username')
-			hero.save()
-			hero_id = hero.id
-			player = Player()
-			player.user = User.objects.get(id = u_id)
-			player.name = form.cleaned_data.get('username')
-			player.hero = Hero.objects.get(id = hero_id)
-			player.tribe = Tribe.objects.get(name = form.cleaned_data.get('select_tribe'))
-			bonus = Bonus()
-			bonus.gold_club = False
-			bonus.save()
-			bon_id = bonus.pk
-			player.bonuses=Bonus.objects.get(id = bon_id)
-			player.old_rank = Player.objects.count()
-			player.location = form.cleaned_data.get('start_location')
-			player.activation_key = account_activation_token.make_token(user)
-			print(urlsafe_base64_encode(force_bytes(user.pk)))
-			player.save()
-			current_site = get_current_site(request)
-			subject = 'Activate Your MySite Account'
-			message = render_to_string('game/activation_email.html', {
-				'user': user,
-				'domain': current_site.domain,
-				'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-				'token': account_activation_token.make_token(user),
-			})
-			user.email_user(subject, message)
-				
-			return redirect('/login/')
+@login_required	
+def center(request):
+	user = request.user
+	player = Player.objects.get(user = user)
+	update_res(player.last_village)
+	village_name = player.last_village.name
+	resources = player.last_village.resources
+	warehouse = player.last_village.storage_capacity
+	silo = player.last_village.food_capacity
+	buildings = ['pos_01', 'pos_02', 'pos_03', 'pos_04', 'pos_05', 'pos_06', 'pos_07', 'pos_08', 'pos_09', 'pos_10', 'pos_11', 'pos_12', 'pos_13', 'pos_14', 'pos_15', 'pos_16', 'pos_17', 'pos_18', 'pos_19', 'pos_20', 'pos_21', 'pos_22', 'pos_23', 'pos_24']
+	picture = []
+	lvl = []
+	name = [] 
+	bajte = player.last_village.center
+	for building in buildings:
+		bajta = getattr(bajte, building)
+		try:
+			name.append(bajta.building.name)
+			lvl.append(bajta.lvl)
+		except Exception:
+			name.append(_('Empty building spot'))
+			lvl.append(0)
+		try:
+			picture.append(bajta.building.image.url)
+		except Exception:
+			picture.append('/media/init/img/buildings/none.png')
+	field = zip(buildings,name,lvl,picture)
+	oil = int(float(resources.oil) / warehouse * 100)
+	iron = int(float(resources.iron) / warehouse * 100)
+	wood = int(float(resources.wood) / warehouse * 100)
+	food = int(float(resources.food) / silo * 100)
+	production = player.last_village.production
+	return render(request, 'game/center.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production})
+ 
+@login_required	
+def pop_ranking(request):
+	players = Player.objects.all().order_by('-population')
+	count = Player.objects.count()
+	bar = ['Player', 'Villages','Tribe','Population']
+	if count > 20:
+		paginator = Paginator(players, 20)
+		i = 0
+		while players[i].user.username != request.user.username:
+			i += 1
+		page = request.GET.get('page')
+		try:
+			users = paginator.page(page)
+		except PageNotAnInteger:
+			users = paginator.page((i+1)//20)
+		except EmptyPage:
+			users = paginator.page(paginator.num_pages)
 			
+		return render(request, 'game/ranking.html', {'users':users, 'bar':bar})
 	else:
-		form = SignUpForm()
-	return render(request, 'game/register.html', {'form': form})
-	
-def activate(request, uidb64, token):
-	try:
-		uid = force_text(urlsafe_base64_decode(uidb64))
-		user = User.objects.get(pk=uid)
-	except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-		user = None
-
-	if user is not None and account_activation_token.check_token(user, token):
-		user.is_active = True
-		player = Player.objects.get(user = user)
-		player.is_active = True
-		user.save()
-		village = Village.objects.all()
-		if player.location == 'nw':
-			village.filter(typ = VillageType.objects.get(id = 1),  population = 0, location_latitude__lte = -1, location_longitude__gte = 1)
-		elif player.location == 'ne':
-			village.filter(location_latitude__gte = 1, location_longitude__gte = 1, typ = VillageType.objects.get(id = 1),  population = 0)
-		elif player.location == 'se':
-			village.filter(location_latitude__gte = 1, location_longitude__lte = -1, typ = VillageType.objects.get(id = 1),  population = 0)
-		elif player.location == 'sw':
-			village.filter(location_latitude__lte = -1, location_longitude__lte = -1, typ = VillageType.objects.get(id = 1),  population = 0)
-		best = village[0]
-		for selo in village:
-			if best.location_latitude**2 + best.location_longitude**2 > selo.location_latitude**2 + selo.location_longitude**2:
-				best = selo
-		player.villages.add(best)
-		player.last_village = best
-		best.name = player.user.username+"'s village"
-		village_start(best)
-		player.save()
-		return redirect('/login/')
-	else:
-		return render(request, 'game/activation_invalid.html')
+		return render(request, 'game/ranking.html', {'users':players, 'bar':bar})
 		
-def login(request):
-	username = request.POST['username']
-	password = request.POST['password']
-	user = authenticate(request, username=username, password=password)
-	if user is not None:
-		login(request, user)
-		return redirect('/fields/')
+@login_required	
+def attack_ranking(request):
+	players = Player.objects.all().order_by('-attack_points')
+	count = Player.objects.count()
+	bar = ['Player', 'Villages','Tribe','Attack Points']
+	if count > 20:
+		paginator = Paginator(players, 20)
+		i = 0
+		while players[i].user.username != request.user.username:
+			i += 1
+		page = request.GET.get('page')
+		try:
+			users = paginator.page(page)
+		except PageNotAnInteger:
+			users = paginator.page((i+1)//20)
+		except EmptyPage:
+			users = paginator.page(paginator.num_pages)
+			
+		return render(request, 'game/ranking_attack.html', {'users':users, 'bar':bar})
 	else:
-		return render(request, 'game/login.html')
-
-@staff_member_required
-def init_map(request):
-	map_init()
-	buildings_init()
-	tribe_init()
-	fields_init()
-	return redirect('/')
+		return render(request, 'game/ranking_attack.html', {'users':players, 'bar':bar})
+	
+@login_required	
+def def_ranking(request):
+	players = Player.objects.all().order_by('-def_points')
+	count = Player.objects.count()
+	bar = ['Player', 'Villages','Tribe','Defense Points']
+	if count > 20:
+		paginator = Paginator(players, 20)
+		i = 0
+		while players[i].user.username != request.user.username:
+			i += 1
+		page = request.GET.get('page')
+		try:
+			users = paginator.page(page)
+		except PageNotAnInteger:
+			users = paginator.page((i+1)//20)
+		except EmptyPage:
+			users = paginator.page(paginator.num_pages)
+			
+		return render(request, 'game/ranking_def.html', {'users':users, 'bar':bar})
+	else:
+		return render(request, 'game/ranking_def.html', {'users':players, 'bar':bar})
+	
+@login_required	
+def weekly_ranking(request):
+	attack = Player.objects.extra(select={'offset': 'attack_points - old_att'}).order_by('-offset')
+	defo = Player.objects.extra(select={'offset': 'def_points - old_def'}).order_by('-offset')
+	rank = Player.objects.extra(select={'offset': 'population - old_rank'}).order_by('-offset')
+	raid = Player.objects.all().order_by('-raided')
+	user = request.user
+	user = Player.objects.get(user = user)
+	one = zip(attack,defo)
+	two = zip(rank,raid)
+	return render(request, 'game/ranking_weekly.html', {'user':user, 'one':one, 'two':two})
+	
+def find_headquarters_bonus(village):
+	pos = ['pos_01','pos_02','pos_03','pos_04','pos_05','pos_06','pos_07','pos_08','pos_09','pos_10','pos_11','pos_12','pos_13','pos_14','pos_15','pos_16','pos_17','pos_18','pos_19','pos_20','pos_21','pos_22','pos_23','pos_24']
+	for i in pos:
+		path = getattr(village.center,i)
+		if path.building.name == 'Headquarters':
+			head = path.building.cost.filter(level = path.lvl)
+			return head[0].bonus
+			break
+			
+@login_required
+def field(request, pos):
+	user = request.user
+	player = Player.objects.get(user = user)
+	village_name = player.last_village.name
+	update_res(player.last_village)
+	resources = player.last_village.resources
+	warehouse = player.last_village.storage_capacity
+	silo = player.last_village.food_capacity
+	oil = int(float(resources.oil) / warehouse * 100)
+	iron = int(float(resources.iron) / warehouse * 100)
+	wood = int(float(resources.wood) / warehouse * 100)
+	food = int(float(resources.food) / silo * 100)
+	production = player.last_village.production
+	field = getattr(player.last_village.fields, pos)
+	current_lvl = field.lvl
+	now = field.name.cost.filter(level = current_lvl)
+	now = now[0]
+	current_production = now.bonus
+	nex = field.name.cost.filter(level = current_lvl+1)
+	nex = nex[0]
+	upgraded_production = nex.bonus
+	cost_oil = nex.oil
+	cost_iron = nex.iron
+	cost_wood = nex.wood
+	cost_food = nex.food
+	seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
+	seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+	upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
+	description = field.name.description
+	ok = "0" # TODO
+	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food:
+		if player.last_village.field_1 is None:
+			ok = "1"
+		elif player.last_village.field_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
+			ok = "1"
+	try:
+		picture = (field.name.image.url)
+	except Exception:
+		picture = ('/media/init/img/buildings/none.png')
+	return render(request, 'game/field.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok})
+	
+def upgrade_field(request, pos):
+	user = request.user
+	player = Player.objects.get(user = user)
+	update_res(player.last_village)
+	resources = player.last_village.resources
+	field = getattr(player.last_village.fields, pos)
+	current_lvl = field.lvl
+	nex = field.name.cost.filter(level = current_lvl+1)
+	nex = nex[0]
+	cost_oil = nex.oil
+	cost_iron = nex.iron
+	cost_wood = nex.wood
+	cost_food = nex.food
+	seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
+	seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+	upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
+	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food:
+		if player.last_village.field_1 is None:
+			resources.oil -= cost_oil
+			resources.iron -= cost_iron
+			resources.wood -= cost_wood
+			resources.food -= cost_food
+			resources.save()
+			queue = FieldQueue()
+			queue.field = field
+			queue.to = current_lvl+1
+			queue.end = datetime.utcnow().replace(tzinfo=utc)+timedelta(seconds = seconds)
+			queue.save()
+			player.last_village.field_1 = queue
+			player.last_village.next_update = queue.end
+			player.last_village.save()
+			player.next_update = queue.end
+			player.save()
+		elif player.last_village.field_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
+			resources.oil -= cost_oil
+			resources.iron -= cost_iron
+			resources.wood -= cost_wood
+			resources.food -= cost_food
+			resources.save()
+			queue = FieldQueue()
+			queue.field = field
+			queue.to = current_lvl+1
+			queue.begin = player.last_village.field_1.end
+			queue.end = player.last_village.field_1.end+timedelta(seconds = seconds)
+			queue.save()
+			player.last_village.field_2 = queue
+			player.last_village.save()
+	return redirect ('/fields/')
+			

@@ -5,3 +5,5 @@ def slug(value):
     return slugify(unidecode(value))
 
 register.filter('slug', slug)
+
+
