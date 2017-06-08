@@ -309,6 +309,9 @@ class Village(models.Model):
 	building_1 = models.ForeignKey(BuildingQueue, default = None, null = True)
 	building_2 = models.ForeignKey(BuildingQueue, default = None, null = True, related_name = 'Secondary')
 	next_update = models.DateTimeField(default = None, null = True) 
+	real_production = models.ForeignKey(Resources, related_name = 'real', null = True, default = None)
+	bonus = models.ForeignKey(Resources, related_name = 'bonus', null = True, default = None)
+	free_crop = models.IntegerField()
 
 class Update_negative(models.Model):
 	empty_time = models.DateTimeField()
@@ -330,7 +333,7 @@ class Bonus(models.Model):
 	plus_account = models.DateTimeField(verbose_name = _('Plus Account'), default = datetime.now())	
 	oil_bonus_production = models.DateTimeField(verbose_name = _('Oil bonus production'), default = datetime.now())	
 	iron_bonus_production = models.DateTimeField(verbose_name = _('Iron bonus production'), default = datetime.now())	
-	coal_bonus_production = models.DateTimeField(verbose_name = _('Coal bonus production'), default = datetime.now())
+	wood_bonus_production = models.DateTimeField(verbose_name = _('Wood bonus production'), default = datetime.now())
 	food_bonus_production = models.DateTimeField(verbose_name = _('Food bonus production'), default = datetime.now())	
 
 class Defender(models.Model):
@@ -422,6 +425,7 @@ class Player(models.Model):
 	activation_key = models.CharField(max_length = 25, null = True)
 	profile = models.TextField(max_length = 1000, null = True)
 	notes = models.TextField(max_length = 1000, null = True)
+	parliament = models.BooleanField(default = False)
 	ne = 'ne'
 	nw = 'nw'
 	se = 'se'

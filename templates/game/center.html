@@ -82,5 +82,20 @@
         </div>
     </section>
     <!--/#portfolio-->
-
+ <section id="action">
+        <div class="vertical-center">
+             <div class="container">
+                <div class="row">
+                    <div class="action count">
+						{% for q,e in queue %}
+                        <div class="col-sm-3 text-center wow bounceIn" data-wow-duration="1000ms" data-wow-delay="300ms">
+                            <p>{{q}} {{e|time:"N j H:M:S"}}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+   </section>
+    <!--/#action-->
 {% endblock %}

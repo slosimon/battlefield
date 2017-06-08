@@ -26,6 +26,7 @@ from django.views.generic.list import ListView
 from django.utils.translation import ugettext_lazy as _
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.timezone import utc
+import get_buildings
 
 @login_required
 def fields(request):
@@ -55,7 +56,22 @@ def fields(request):
 	wood = int(float(resources.wood) / warehouse * 100)
 	food = int(float(resources.food) / silo * 100)
 	production = player.last_village.production
-	return render(request, 'game/fields.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production})
+	queue_name = []
+	queue_end = []
+	if player.last_village.field_1 is not None:
+		queue_name.append(player.last_village.field_1.field.name.name)
+		queue_end.append(player.last_village.field_1.end)
+	if player.last_village.building_1 is not None:
+		queue_name.append(player.last_village.building_1.building.building.name)
+		queue_end.append(player.last_village.building_1.end)
+	if player.last_village.field_2 is not None:
+		queue_name.append(player.last_village.field_2.field.name.name)
+		queue_end.append(player.last_village.field_2.end)
+	if player.last_village.building_2 is not None:
+		queue_name.append(player.last_village.building_2.building.building.name)
+		queue_end.append(player.last_village.building_2.end)
+	queue = zip(queue_name, queue_end)	
+	return render(request, 'game/fields.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'queue':queue})
 	
 @login_required	
 def center(request):
@@ -89,7 +105,22 @@ def center(request):
 	wood = int(float(resources.wood) / warehouse * 100)
 	food = int(float(resources.food) / silo * 100)
 	production = player.last_village.production
-	return render(request, 'game/center.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production})
+	queue_name = []
+	queue_end = []
+	if player.last_village.field_1 is not None:
+		queue_name.append(player.last_village.field_1.field.name.name)
+		queue_end.append(player.last_village.field_1.end)
+	if player.last_village.building_1 is not None:
+		queue_name.append(player.last_village.building_1.building.building.name)
+		queue_end.append(player.last_village.building_1.end)
+	if player.last_village.field_2 is not None:
+		queue_name.append(player.last_village.field_2.field.name.name)
+		queue_end.append(player.last_village.field_2.end)
+	if player.last_village.building_2 is not None:
+		queue_name.append(player.last_village.building_2.building.building.name)
+		queue_end.append(player.last_village.building_2.end)
+	queue = zip(queue_name, queue_end)	
+	return render(request, 'game/center.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'queue':queue})
  
 @login_required	
 def pop_ranking(request):
@@ -194,6 +225,9 @@ def field(request, pos):
 	production = player.last_village.production
 	field = getattr(player.last_village.fields, pos)
 	current_lvl = field.lvl
+	if player.last_village.field_1 is not None:
+		if player.last_village.field_1.field == field:
+			current_lvl += 1
 	now = field.name.cost.filter(level = current_lvl)
 	now = now[0]
 	current_production = now.bonus
@@ -218,7 +252,8 @@ def field(request, pos):
 		picture = (field.name.image.url)
 	except Exception:
 		picture = ('/media/init/img/buildings/none.png')
-	return render(request, 'game/field.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok})
+
+	return render(request, 'game/field.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok, 'current_production':current_production, 'upgraded_production':upgraded_production})
 	
 def upgrade_field(request, pos):
 	user = request.user
@@ -268,4 +303,116 @@ def upgrade_field(request, pos):
 			player.last_village.field_2 = queue
 			player.last_village.save()
 	return redirect ('/fields/')
+	
+@login_required
+def building(request, pos):
+	user = request.user
+	player = Player.objects.get(user = user)
+	village_name = player.last_village.name
+	update_res(player.last_village)
+	resources = player.last_village.resources
+	warehouse = player.last_village.storage_capacity
+	silo = player.last_village.food_capacity
+	oil = int(float(resources.oil) / warehouse * 100)
+	iron = int(float(resources.iron) / warehouse * 100)
+	wood = int(float(resources.wood) / warehouse * 100)
+	food = int(float(resources.food) / silo * 100)
+	production = player.last_village.production
+	building = getattr(player.last_village.center, pos)
+	if building is not None:
+		current_lvl = building.lvl
+		if player.last_village.building_1 == building:
+			lvl += 1
+		now = building.building.cost.filter(level = current_lvl)
+		now = now[0]
+		current_production = now.bonus
+		nex = building.building.cost.filter(level = current_lvl+1)
+		nex = nex[0]
+		upgraded_production = nex.bonus
+		cost_oil = nex.oil
+		cost_iron = nex.iron
+		cost_wood = nex.wood
+		cost_food = nex.food
+		seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
+		seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+		upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
+		description = building.building.description
+		ok = "0" # TODO
+		if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food:
+			if player.last_village.building_1 is None:
+				ok = "1"
+			elif player.last_village.building_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
+				ok = "1"
+		try:
+			picture = (field.name.image.url)
+		except Exception:
+			picture = ('/media/init/img/buildings/none.png')
+		return render(request, 'game/field.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok})
+	else:
+		possible = get_buildings.get_possible(player)
+		
 			
+def upgrade_building(request, pos):
+	user = request.user
+	player = Player.objects.get(user = user)
+	update_res(player.last_village)
+	resources = player.last_village.resources
+	building = getattr(player.last_village.center, pos)
+	current_lvl = building.lvl
+	nex = building.building.cost.filter(level = current_lvl+1)
+	nex = nex[0]
+	cost_oil = nex.oil
+	cost_iron = nex.iron
+	cost_wood = nex.wood
+	cost_food = nex.food
+	seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
+	seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+	upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
+	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food:
+		if player.last_village.building_1 is None:
+			resources.oil -= cost_oil
+			resources.iron -= cost_iron
+			resources.wood -= cost_wood
+			resources.food -= cost_food
+			resources.save()
+			queue = BuildingQueue()
+			queue.building = building
+			queue.to = current_lvl+1
+			queue.end = datetime.utcnow().replace(tzinfo=utc)+timedelta(seconds = seconds)
+			queue.save()
+			player.last_village.building_1 = queue
+			player.last_village.next_update = queue.end
+			player.last_village.save()
+			player.next_update = queue.end
+			player.save()
+		elif player.last_village.building_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
+			resources.oil -= cost_oil
+			resources.iron -= cost_iron
+			resources.wood -= cost_wood
+			resources.food -= cost_food
+			resources.save()
+			queue = BuildingQueue()
+			queue.building = building
+			queue.to = current_lvl+1
+			queue.begin = player.last_village.building_1.end
+			queue.end = player.last_village.building_1.end+timedelta(seconds = seconds)
+			queue.save()
+			player.last_village.building_2 = queue
+			player.last_village.save()
+	return redirect ('/center/')
+	
+def build(request,pos,build):
+	user = request.user
+	player = Player.objects.get(user = user)
+	
+	village_name = player.last_village.name
+	update_res(player.last_village)
+	resources = player.last_village.resources
+	warehouse = player.last_village.storage_capacity
+	silo = player.last_village.food_capacity
+	oil = int(float(resources.oil) / warehouse * 100)
+	iron = int(float(resources.iron) / warehouse * 100)
+	wood = int(float(resources.wood) / warehouse * 100)
+	food = int(float(resources.food) / silo * 100)
+	production = player.last_village.production
+	return 

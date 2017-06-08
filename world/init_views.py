@@ -78,15 +78,14 @@ def activate(request, uidb64, token):
 		player = Player.objects.get(user = user)
 		player.is_active = True
 		user.save()
-		village = Village.objects.all()
 		if player.location == 'nw':
-			village.filter(typ = VillageType.objects.get(id = 1),  population = 0, location_latitude__lte = -1, location_longitude__gte = 1)
+			village = Village.objects.filter(typ = VillageType.objects.get(id = 1),  population = 0, location_latitude__lte = -1, location_longitude__gte = 1)
 		elif player.location == 'ne':
-			village.filter(location_latitude__gte = 1, location_longitude__gte = 1, typ = VillageType.objects.get(id = 1),  population = 0)
+			village = Village.objects.filter(location_latitude__gte = 1, location_longitude__gte = 1, typ = VillageType.objects.get(id = 1),  population = 0)
 		elif player.location == 'se':
-			village.filter(location_latitude__gte = 1, location_longitude__lte = -1, typ = VillageType.objects.get(id = 1),  population = 0)
+			village = Village.objects.filter(location_latitude__gte = 1, location_longitude__lte = -1, typ = VillageType.objects.get(id = 1),  population = 0)
 		elif player.location == 'sw':
-			village.filter(location_latitude__lte = -1, location_longitude__lte = -1, typ = VillageType.objects.get(id = 1),  population = 0)
+			village = Village.objects.filter(location_latitude__lte = -1, location_longitude__lte = -1, typ = VillageType.objects.get(id = 1),  population = 0)
 		best = village[0]
 		for selo in village:
 			if best.location_latitude**2 + best.location_longitude**2 > selo.location_latitude**2 + selo.location_longitude**2:
@@ -95,7 +94,7 @@ def activate(request, uidb64, token):
 		player.last_village = best
 		best.name = player.user.username+"'s village"
 		best.population = 2
-		village_start(best)
+		village_start(player, best)
 		player.save()
 		return redirect('/login/')
 	else:

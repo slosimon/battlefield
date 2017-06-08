@@ -5,7 +5,7 @@ from building.models import Building as Bbuilding
 from building.models import Field as Bfield
 from django.conf import settings
 
-def village_start(village):
+def village_start(player, village):
 	buildings = Bbuilding.objects.get(name = 'Headquarters')
 	build = Building()
 	build.building = buildings
@@ -108,8 +108,33 @@ def village_start(village):
 	resources.save()
 	village.resources = resources
 	village.update = datetime.now()
+	typ = village.typ
 	production = Resources.objects.create(oil = 2 * typ.oil_field * settings.SPEED, iron = 2 * typ.oil_field * settings.SPEED, wood = 2 * typ.oil_field * settings.SPEED, food = 2 * typ.oil_field * settings.SPEED)
 	production.save()
+	real = Resources.objects.create(oil = 2 * typ.oil_field * settings.SPEED, iron = 2 * typ.oil_field * settings.SPEED, wood = 2 * typ.oil_field * settings.SPEED, food = 2 * typ.oil_field * settings.SPEED)
+	real.save()
+	village.real_production = real
+	village.free_crop = real.food - 2
+	if player.bonuses.oil_bonus_production:
+		oil = 25
+	else:
+		oil = 0
+	if player.bonuses.iron_bonus_production:
+		iron = 25
+	else:
+		iron = 0
+	if player.bonuses.wood_bonus_production:
+		wood = 25
+	else:
+		wood = 0
+	if player.bonuses.food_bonus_production:
+		food = 25
+	else:
+		food = 0
+		
+	bonus = Resources.objects.create(oil = oil, iron = iron, wood = wood, food = food)
+	bonus.save()
+	village.bonus = bonus 
 	village.production = production
 	village.save()
 	return 0

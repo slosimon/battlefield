@@ -74,6 +74,7 @@ def map_init():
 					village.typ = VillageType.objects.get(id = 10)
 				village.location_latitude = i
 				village.location_longitude = j
+				village.free_crop = 0
 				village.save()
 				continue
 			if num < 19:
