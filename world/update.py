@@ -55,9 +55,8 @@ def update_production(village, typ, lvl):
 	village.population += get_new[0].cost
 	up = getattr(village.production,res)
 	if res == 'food':
-		village.free_crop += (int(get_new[0].bonus), int(get_bonus[0].bonus))
+		village.free_crop += (int(get_new[0].bonus) - int(get_bonus[0].bonus))
 	up = up + (int(get_new[0].bonus) - int(get_bonus[0].bonus))
-	print(up)
 	setattr(village.production, res, up)
 	village.production.save()
 	village.save()
@@ -69,8 +68,13 @@ def update_building(village, typ, lvl):
 	building.lvl += 1
 	building.save()
 	typ = building.building.cost
-	print(typ)
 	get_new = typ.filter(level = lvl)
+	if building.building.name == 'Warehouse':
+		warehouse = building.building
+		village.storage_capacity += (warehouse.cost.filter(level = lvl+1)[0].bonus - warehouse.cost.filter(level = lvl)[0].bonus)
+	if building.building.name == 'Silo':
+		warehouse = building.building
+		village.food_capacity += (warehouse.cost.filter(level = lvl+1)[0].bonus - warehouse.cost.filter(level = lvl)[0].bonus)
 	village.production.food -= get_new[0].cost
 	village.population += get_new[0].cost
 	village.free_crop -= get_new[0].cost
@@ -79,10 +83,9 @@ def update_building(village, typ, lvl):
 	update_res(village)
 
 def queue(): # TODO when army system
-	sleep(20)
+	sleep(2)
 	while True:
 		players = Player.objects.exclude(next_update__isnull = True).order_by('next_update')
-		
 		if len(players) > 0:
 			villages = players[0].villages.exclude(next_update__isnull = True).order_by('next_update')
 			
@@ -99,28 +102,16 @@ def queue(): # TODO when army system
 						
 						villages[0].field_2 = None
 						if villages[0].field_1 is not None:
-							villages[0].next_update = villages[0].field_1.end
+							villages[0].next_update = min(villages[0].field_1.end, villages[0].building_1.end)
+						elif villages[0].building_1 is not None:
+							villages[0].next_update = villages[0].building_1.end
 						else:
 							villages[0].next_update = None
 						villages[0].save()
 						players = []
-					if villages[0].field_1 is not None:	
-						if villages[0].field_1.end >= villages[0].building_1.end:
-							update_building(villages[0], villages[0].building_1.building, villages[0].building_1.to)
-							if villages[0].building_2 is not None:
-								villages[0].building_1 = villages[0].building_2
-								villages[0].building_1.start = None
-							else:
-								villages[0].building_1 = None
-							villages[0].building_2 = None
-							if villages[0].building_1 is not None:
-								villages[0].next_update = building_1.end
-							else:
-								villages[0].next_update = None
-							villages[0].save()
-						players = []
-					elif villages[0].field_1.end <= datetime.utcnow().replace(tzinfo=utc):
+						continue
 						
+					if villages[0].field_1.end >= villages[0].building_1.end and villages[0].building_1.end <= datetime.utcnow().replace(tzinfo=utc):
 						update_building(villages[0], villages[0].building_1.building, villages[0].building_1.to)
 						if villages[0].building_2 is not None:
 							villages[0].building_1 = villages[0].building_2
@@ -129,11 +120,29 @@ def queue(): # TODO when army system
 							villages[0].building_1 = None
 						villages[0].building_2 = None
 						if villages[0].building_1 is not None:
-							villages[0].next_update = building_1.end
+							villages[0].next_update = min(villages[0].building_1.end, villages[0].field_1.end)
+						elif villages[0].field_1 is not None:
+							villages[0].next_update = villages[0].field_1.end
 						else:
 							villages[0].next_update = None
 						villages[0].save()
 						players = []
+						continue
+					#if villages[0].building_1.end <= datetime.utcnow().replace(tzinfo=utc):
+						
+						#update_building(villages[0], villages[0].building_1.building, villages[0].building_1.to)
+						#if villages[0].building_2 is not None:
+							#villages[0].building_1 = villages[0].building_2
+							#villages[0].building_1.start = None
+						#else:
+							#villages[0].building_1 = None
+						#villages[0].building_2 = None
+						#if villages[0].building_1 is not None:
+							#villages[0].next_update = building_1.end
+						#else:
+							#villages[0].next_update = None
+						#villages[0].save()
+						#players = []
 						
 				elif villages[0].field_1 is not None:
 					

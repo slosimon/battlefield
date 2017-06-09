@@ -27,6 +27,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.timezone import utc
 import get_buildings
+from slugify import slugify
 
 @login_required
 def fields(request):
@@ -208,6 +209,7 @@ def find_headquarters_bonus(village):
 			head = path.building.cost.filter(level = path.lvl)
 			return head[0].bonus
 			break
+	return 100
 			
 @login_required
 def field(request, pos):
@@ -238,12 +240,15 @@ def field(request, pos):
 	cost_iron = nex.iron
 	cost_wood = nex.wood
 	cost_food = nex.food
+	needed = 0
+	if field.name is not 'Farm':
+		needed = nex.cost
 	seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
 	seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
 	upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
 	description = field.name.description
 	ok = "0" # TODO
-	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food:
+	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= needed + 1:
 		if player.last_village.field_1 is None:
 			ok = "1"
 		elif player.last_village.field_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
@@ -268,10 +273,13 @@ def upgrade_field(request, pos):
 	cost_iron = nex.iron
 	cost_wood = nex.wood
 	cost_food = nex.food
+	needed = 0
+	if field.name is not 'Farm':
+		needed = nex.cost
 	seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
 	seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
 	upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
-	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food:
+	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= needed + 1:
 		if player.last_village.field_1 is None:
 			resources.oil -= cost_oil
 			resources.iron -= cost_iron
@@ -305,7 +313,7 @@ def upgrade_field(request, pos):
 	return redirect ('/fields/')
 	
 @login_required
-def building(request, pos):
+def get_building(request, pos):
 	user = request.user
 	player = Player.objects.get(user = user)
 	village_name = player.last_village.name
@@ -318,15 +326,16 @@ def building(request, pos):
 	wood = int(float(resources.wood) / warehouse * 100)
 	food = int(float(resources.food) / silo * 100)
 	production = player.last_village.production
-	building = getattr(player.last_village.center, pos)
-	if building is not None:
-		current_lvl = building.lvl
-		if player.last_village.building_1 == building:
-			lvl += 1
-		now = building.building.cost.filter(level = current_lvl)
+	buildinga = getattr(player.last_village.center, pos)
+	if buildinga is not None:
+		current_lvl = buildinga.lvl
+		if player.last_village.building_1 is not None:
+			if player.last_village.building_1.building == buildinga:
+				current_lvl += 1
+		now = buildinga.building.cost.filter(level = current_lvl)
 		now = now[0]
 		current_production = now.bonus
-		nex = building.building.cost.filter(level = current_lvl+1)
+		nex = buildinga.building.cost.filter(level = current_lvl+1)
 		nex = nex[0]
 		upgraded_production = nex.bonus
 		cost_oil = nex.oil
@@ -336,21 +345,46 @@ def building(request, pos):
 		seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
 		seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
 		upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
-		description = building.building.description
+		description = buildinga.building.description
 		ok = "0" # TODO
-		if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food:
+		if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= nex.cost + 1:
 			if player.last_village.building_1 is None:
 				ok = "1"
 			elif player.last_village.building_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
 				ok = "1"
 		try:
-			picture = (field.name.image.url)
+			picture = (buildinga.building.image.url)
 		except Exception:
 			picture = ('/media/init/img/buildings/none.png')
-		return render(request, 'game/field.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok})
+		return render(request, 'game/building.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok})
 	else:
 		possible = get_buildings.get_possible(player)
-		
+		costa = []
+		images = []
+		description = []
+		ok = []
+		costs = building.models.Building.objects.all()
+		for mozne in possible:
+			for cena in costs:
+				if cena.name == mozne:
+					cost = cena.cost.filter(level = 1)
+					cost = cost[0]
+					costa.append(cost)
+					try:
+						images.append(cena.image)
+					except Exception:
+						images.append('/media/init/img/buildings/none.png')
+					description.append(cena.description)
+					tmp = "0" # TODO
+					print(player.last_village.free_crop, cost.cost +1) 
+					if resources.oil >= cost.oil and resources.iron >= cost.iron and resources.wood >= cost.wood and resources.food >= cost.food and player.last_village.free_crop >= cost.cost +1:
+						if player.last_village.building_1 is None:
+							tmp = "1"
+						elif player.last_village.building_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
+							tmp = "1"
+					ok.append(tmp)
+		mozne = zip(possible,costa, images, description, ok)
+		return render(request, 'game/new-building.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo, 'mozne':mozne, 'pos':pos, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production,})
 			
 def upgrade_building(request, pos):
 	user = request.user
@@ -368,7 +402,7 @@ def upgrade_building(request, pos):
 	seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
 	seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
 	upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
-	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food:
+	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= nex.cost + 1:
 		if player.last_village.building_1 is None:
 			resources.oil -= cost_oil
 			resources.iron -= cost_iron
@@ -401,7 +435,7 @@ def upgrade_building(request, pos):
 			player.last_village.save()
 	return redirect ('/center/')
 	
-def build(request,pos,build):
+def build(request,pos,bui):
 	user = request.user
 	player = Player.objects.get(user = user)
 	
@@ -415,4 +449,21 @@ def build(request,pos,build):
 	wood = int(float(resources.wood) / warehouse * 100)
 	food = int(float(resources.food) / silo * 100)
 	production = player.last_village.production
-	return 
+	buildings = building.models.Building.objects.all()
+	buildinga = Building()
+	for bajta in buildings:
+		if slugify(bajta.name) == bui:
+			buildinga.building = bajta
+			buildinga.lvl = 0
+	buildinga.save()
+	cena = building.models.Building.objects.filter(name = buildinga.building)
+	cena = cena[0].cost.filter(level = 1)
+	cena = cena[0]
+	if resources.oil >= cena.oil and resources.iron >= cena.iron and resources.wood >= cena.wood and resources.food >= cena.food and player.last_village.free_crop >= cena.cost + 1:
+		setattr(player.last_village.center, pos, buildinga)
+		player.last_village.center.save()
+		upgrade_building(request, pos)
+		return redirect('/center')
+	else:
+		# TODO Remove building
+		return redirect('/center')
