@@ -180,18 +180,29 @@ def queue(): # TODO when army system
 						players = []
 			players = Player.objects.exclude(next_update__isnull = True).order_by('next_update')
 			villages = players[0].villages.exclude(next_update__isnull = True).order_by('next_update')
+			player = players[0]
 			if len(villages) > 0:
-				players[0].next_update = villages[0].next_update
+				player.next_update = villages[0].next_update
 			else:
-				players[0].next_update = None
-			players[0].save()
-		#players = Player.objects.all()
-		#for player in players:
-			#villages = player.villages.objects.all()
-			#count = 0
-			#for village in villages:
-				#count += village.population
-			#player.population = count
-			#player.save()
+				setattr(player, 'next_update', None)
+				player.save()
+				print(player.next_update)
+			player.save()
+		else:
+			
+			sleep(10)
+			
+def population():
+	while True:
+		players = Player.objects.all()
+		print(len(players))
+		for player in players:
+			villages = player.villages.all()
+			count = 0
+			for village in villages:
+				count += village.population
+			player.population = count
+			player.save()
+		sleep(60)
 		
 

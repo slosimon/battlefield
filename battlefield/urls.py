@@ -57,3 +57,7 @@ handler404='battlefield.views.handler404'
 t = Thread(target = update.queue, args = (), kwargs = {})
 t.setDaemon(True)
 t.start()
+
+t = Thread(target = update.population, args = (), kwargs = {})
+t.setDaemon(True)
+t.start()
