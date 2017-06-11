@@ -467,3 +467,53 @@ def build(request,pos,bui):
 	else:
 		# TODO Remove building
 		return redirect('/center')
+		
+def maps(request,x,y):
+	x = int(x)
+	y = int(y)
+	xcoords = []
+	ycoords = []
+	for i in range (7):
+		if i+x-3 < -settings.MAP_SIZE:
+			xcoords.append(settings.MAP_SIZE-(-i-x+2)%settings.MAP_SIZE)
+		elif i+x-3 > settings.MAP_SIZE:
+			xcoords.append(- 2 * settings.MAP_SIZE +i +x -4)
+		else:
+			xcoords.append(i+x-3)
+		if i+y-3 < -settings.MAP_SIZE:
+			ycoords.append(settings.MAP_SIZE-(-i-y+2)%settings.MAP_SIZE)
+		elif i+y-3 > settings.MAP_SIZE:
+			ycoords.append(- 2 * settings.MAP_SIZE +i +y -4)
+		else:
+			ycoords.append(i+y-3)
+		print(xcoords,ycoords)
+	ycoords = ycoords[::-1]
+	village = []
+	image = []
+	ok = []
+	for i in range(7):
+		for j in range (7):
+			try:
+				selo = Village.objects.filter(location_latitude = xcoords[j], location_longitude = ycoords[i])[0]
+				village.append(selo)
+				if selo.population > 0:
+					image.append('/media/villages/village.png')
+				else:
+					image.append('/media/villages/empty-village.png')
+				ok.append(1)
+			except Exception:
+				try:
+					selo = Oasis.objects.filter(location_latitude = xcoords[j], location_longitude = ycoords[i])[0]
+					village.append(selo)
+					image.append('/media/villages/oasis.png')
+					ok.append(1)
+				except:
+					ok.append(0)
+					village.append(0)
+					image.append('/media/villages/empty.png')
+	villages = zip(village,image,ok)
+	return render(request, 'game/map.html', {'villages':villages})
+			
+	
+	
+	
