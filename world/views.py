@@ -514,6 +514,8 @@ def maps(request,x,y):
 	villages = zip(village,image,ok)
 	return render(request, 'game/map.html', {'villages':villages})
 			
-	
-	
-	
+def map_zero(request):
+	user = request.user
+	player = Player.objects.get(user = user)
+	last = player.last_village
+	return redirect('/map/x='+str(last.location_latitude)+'y='+str(last.location_longitude)+'/')

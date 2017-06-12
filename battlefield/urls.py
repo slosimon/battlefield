@@ -46,6 +46,7 @@ urlpatterns = [
 	url(r'^fields/(?P<pos>[0-9o-s_]+)/upgrade/$', main_views.upgrade_field, name = 'upfield'),
 	url(r'^center/(?P<pos>[0-9o-s_]+)/$', main_views.get_building, name = 'building'),
 	url(r'^center/(?P<pos>[0-9o-s_]+)/upgrade/$', main_views.upgrade_building, name = 'upbuilding'),
+	url(r'^map/$', main_views.map_zero, name = 'map'),
 	url(r'^map/x=(?P<x>[0-9-]+)y=(?P<y>[0-9-]+)/$', main_views.maps, name = 'map'),
 	url(r'^center/(?P<pos>[0-9o-s_]+)/(?P<bui>[0-9A-Za-z-]+)/$', main_views.build, name = 'build'),
 	url(r'^map_init/$', world_views.init_map, name = 'map_init'), #Works
@@ -62,3 +63,4 @@ t.start()
 t = Thread(target = update.population, args = (), kwargs = {})
 t.setDaemon(True)
 t.start()
+
