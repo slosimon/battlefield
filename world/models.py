@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 import building
+import troops
 # Create your models here.
 
 class Tribe(models.Model):
@@ -133,41 +134,9 @@ class BuildingQueue(models.Model):
 	start = models.DateTimeField(null = True, default = None)
 	end = models.DateTimeField()
 	
-class Troop_type(models.Model):
-	infantry = 'Infantry'
-	aviation = 'Aviation'
-	artilery = 'Artilery'
-	marine = 'Marine'
-	options = (
-		(infantry, _('Infantry')),
-		(aviation, _('Aviation')),
-		(artilery, _('Artilery')),
-		(marine, _('Marine')),
-	)
-	typ = models.CharField(max_length = 10, choices = options)
-	def __unicode__(self):
-		return unicode(self.typ)
-	
 class Troop(models.Model):
-	name = models.CharField(max_length = 25)
-	training_time_per_unit = models.IntegerField()
-	cost_oil = models.IntegerField()
-	cost_iron = models.IntegerField()
-	cost_coal = models.IntegerField()
-	cost_food = models.IntegerField()
-	consumption = models.IntegerField()
-	attack_power = models.IntegerField()
-	def_infantry = models.IntegerField()
-	def_artilery = models.IntegerField()
-	def_aviation = models.IntegerField()
-	def_marine = models.IntegerField()
-	troop_type = models.ForeignKey(Troop_type)
-	icon = models.ImageField()
-	picture = models.ImageField()
-	carry = models.IntegerField(default = 0)
-	destruction_power = models.IntegerField(default = 0)
-	def __unicode__(self):
-		return unicode(self.name)
+	troop = models.ForeignKey('troops.Troops', null = True)
+	lvl = models.IntegerField(default = 0)
 
 class Partisan_troops(models.Model):
 	t0 = models.ForeignKey(Troop, related_name = "Volounteer")
@@ -287,6 +256,15 @@ class Hangar(models.Model):
 class Port(models.Model):
 	queue = models.ManyToManyField(Queue)
 	
+class TrainingQueue(models.Model):
+	barracks = models.ForeignKey(Barracks, null = True, default = None)
+	workshop = models.ForeignKey(Workshop, null = True, default = None)
+	hangar = models.ForeignKey(Hangar, null = True, default = None)
+	port = models.ForeignKey(Port, null = True, default = None)
+	barracks_large = models.ForeignKey(Barracks,related_name = 'Large', null = True, default = None)
+	hangar_large = models.ForeignKey(Hangar, related_name = 'Large', null = True, default = None)
+	next_update = models.TimeField(default = None, null = True)
+	
 class Village(models.Model):
 	typ = models.ForeignKey(VillageType)
 	name = models.CharField(max_length = 26, null = True)
@@ -312,6 +290,7 @@ class Village(models.Model):
 	real_production = models.ForeignKey(Resources, related_name = 'real', null = True, default = None)
 	bonus = models.ForeignKey(Resources, related_name = 'bonus', null = True, default = None)
 	free_crop = models.IntegerField()
+	training_queue = models.ForeignKey(TrainingQueue, null = True, default = None)
 
 class Update_negative(models.Model):
 	empty_time = models.DateTimeField()
@@ -411,7 +390,8 @@ class Player(models.Model):
 	sitter_2 = models.ForeignKey(User, related_name="second_sitter", default = None, null = True)
 	last_login = models.DateTimeField(default = datetime.now())
 	artifact_holder = models.BooleanField(default = False)
-	culture_points = models.IntegerField(default = 0)
+	culture_points = models.FloatField(default = 0)
+	last_update = models.DateTimeField(null = True, default = None)
 	medals = models.ManyToManyField(Medals, null = True)
 	old_rank = models.IntegerField()
 	raided = models.IntegerField(default = 0)
@@ -426,6 +406,7 @@ class Player(models.Model):
 	profile = models.TextField(max_length = 1000, null = True)
 	notes = models.TextField(max_length = 1000, null = True)
 	parliament = models.BooleanField(default = False)
+	in_ally = models.BooleanField(default = False)
 	ne = 'ne'
 	nw = 'nw'
 	se = 'se'
@@ -443,6 +424,7 @@ def update_user_profile(sender, instance, created, **kwargs):
 	if created:
 		Player.objects.create(user=instance)
 	instance.profile.save()
+	
 class Oasis(models.Model):
 	location_latitude = models.IntegerField() # Because every oasis need co-ordinates
 	location_longitude = models.IntegerField() # And two of them

@@ -159,16 +159,16 @@ def fields_init():
 		field = building.models.Field()
 		field.name = str(item)
 		try:
-			field.image = 'init/img/fields/'+slugify(build)+'.png'
+			field.image = 'init/img/fields/'+slugify(item)+'.png'
 		except Exception:
 			pass
 		try:
-			field.description = 'init/descriptions/fields/'+slugify(build)+'.txt'
+			field.description = 'init/descriptions/fields/'+slugify(item)+'.txt'
 		except Exception:
 			pass
 		field.save()
-		print('init/'+slugify(str(field))+'.csv')
-		with open('init/'+slugify(str(field))+'.csv', 'rb') as fin:
+		print('init/'+slugify(str(item))+'.csv')
+		with open('init/'+slugify(str(item))+'.csv', 'rb') as fin:
 			spamreader = csv.reader(fin, delimiter=' ', quotechar='|')
 			for lvl in spamreader:
 				row = lvl[0].split(',')

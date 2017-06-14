@@ -50,11 +50,12 @@
         </div>
    </section>
     <!--/#action-->
-    
+
 
      <section id="portfolio">
         <div class="container">
             <div class="row">
+				
 				<div class="portfolio-items">
 					{% for village, image, ok in villages %}                   
 					<div class="col-xs-2 col-sm-2 col-md-2 portfolio-item " style="padding-left:1px;padding-right:1px; padding-top: 1px; padding-bottom: 1px;width: 14.1%">
@@ -65,10 +66,23 @@
 								</div>
 								<div class="portfolio-view">
 									<ul class="nav nav-pills">
-										{% if ok == 1 %}
+										{% if ok == '1' %}
+											{% if village.name == None %}
+												{% if village.population == 0 %}
+													<li>Empty village</li>
+												{% else %}
+													{% if village.owner == None %}
+														<li>Unocupied oasis</li>
+													{% else %}
+														<li>Ocupied oasis: {{village.owner}}</li>
+													{% endif %}
+												{% endif %}
+											{% else %}
+												<li>{{village.name}}</li>
+											{% endif %}
 											<li><a href="/village/x={{village.location_latitude}}y={{village.location_longitude}}/" ><i class="fa fa-eye"></i></a></li>
 										{% else %}
-											<li><a href="" data-lightbox="example-set"><i class="fa fa-eye"></i></a></li>
+											<li>Wilderness</li>
 										{% endif %}
 									</ul>
 								</div>
@@ -76,6 +90,53 @@
 						</div>
 					</div>
 					{% endfor %}
+					<div class="row">
+						<div class="col-xs-2 col-sm-2 col-md-2">
+							<form method="GET" action="/map/x={{x}}y={{y|add:1}}/">
+								{% csrf_token %}
+								<input type="image" src='/static/images/lightbox/up.png' value="Up" >
+							</form>
+						</div>
+						<div class="col-xs-2 col-sm-2 col-md-2">
+							<form method="POST" action="/map/x={{x}}y={{y|add:-1}}/">
+								{% csrf_token %}
+								<input type="image" src='/static/images/lightbox/down.png' value="Down">
+							</form>
+						</div>
+						<div class="col-xs-2 col-sm-2 col-md-2">
+							<form method="POST" action="/map/x={{x|add:-1}}y={{y}}/">
+								{% csrf_token %}
+								<input type="image" src='/static/images/lightbox/left.png' value="Left">
+							</form>
+						</div>
+						<div class="col-xs-2 col-sm-2 col-md-2">
+							<form method="POST" action="/map/x={{x|add:1}}y={{y}}/">
+								{% csrf_token %}
+								<input type="image" src='/static/images/lightbox/right.png' value="Right">
+							</form>
+						</div>
+						<div class="col-xs-2 col-sm-2 col-md-2">
+							<form method='POST' action='' id ='mapform' name='mapform'>
+								{% csrf_token %}
+								<!--<div class='bs-example'>-->
+									Go to: 
+									<input type='text' name='x' id='x' size='1'>
+									<input type='text' name='y' id='y' size='1'>
+									<button action='submit' class='btn btn-sm btn-success'>Go</button>
+								<!--</div>-->
+							</form>
+							<script src="/static/js/jquery.js"></script>
+							<script>
+								$(document).ready(function() {
+									$('#mapform').submit(function(){
+									  var x = $('#x').val();
+									  var y = $('#y').val();
+									  $(this).attr('action', '/map/x=' + x + 'y=' + y + '/');
+									}); 
+								});
+							</script>
+						</div>
+					</div>
 				</div>  
             </div>
         </div>

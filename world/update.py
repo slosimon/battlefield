@@ -6,6 +6,7 @@ from django.conf import settings
 import building
 from models import *
 from time import sleep
+from datetime import timedelta
 def update_real(village):
 	village.real_production.oil = village.production.oil * (100.0+ village.bonus.oil)/100
 	village.real_production.iron = village.production.iron * (100.0+ village.bonus.iron)/100
@@ -59,6 +60,7 @@ def update_production(village, typ, lvl):
 	up = up + (int(get_new[0].bonus) - int(get_bonus[0].bonus))
 	setattr(village.production, res, up)
 	village.production.save()
+	village.culture_points += get_new[0].culture_points
 	village.save()
 	update_res(village)
 	update_real(village)
@@ -79,6 +81,7 @@ def update_building(village, typ, lvl):
 	village.population += get_new[0].cost
 	village.free_crop -= get_new[0].cost
 	village.production.save()
+	village.culture_points += get_new[0].culture_points
 	village.save()
 	update_res(village)
 
@@ -172,7 +175,7 @@ def queue(): # TODO when army system
 						else:
 							villages[0].building_1 = None
 						villages[0].building_2 = None
-						if villages[0].building_1 is not None:
+						if villages[0].building_2 is not None:
 							villages[0].next_update = building_1.end
 						else:
 							villages[0].next_update = None
@@ -195,13 +198,17 @@ def queue(): # TODO when army system
 def population():
 	while True:
 		players = Player.objects.all()
-		print(len(players))
 		for player in players:
 			villages = player.villages.all()
 			count = 0
+			culture = 0
 			for village in villages:
 				count += village.population
+				culture += village.culture_points
 			player.population = count
+			time = (datetime.utcnow().replace(tzinfo=utc) - player.last_update).total_seconds()*1.0/3600.0/24.0
+			player.culture_points += (culture * time)
+			player.last_update = datetime.utcnow().replace(tzinfo=utc)
 			player.save()
 		sleep(60)
 		

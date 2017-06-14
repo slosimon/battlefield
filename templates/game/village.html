@@ -1,0 +1,26 @@
+{% extends 'base_game.html' %}
+{% load static %}
+{% block content %}
+<section id="about-company" class="padding-top wow fadeInUp" data-wow-duration="400ms" data-wow-delay="400ms">
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-12 text-center">
+				<h1 class="margin-bottom">{% if village.name %} {{village.name}} {% else %} Unsettled village {% endif %}</h1>
+				<p><b>Oil fields:</b> {{village.typ.oil_field}}  <b>Iron mines:</b> {{village.typ.iron_mine}}  <b>Forrests:</b> {{village.typ.forrest}}  <b>Farms:</b> {{village.typ.farm}}</p>
+				<form method="POST" action="/map/x={{x}}y={{y}}/">
+					{% csrf_token %}
+					<input type="submit" class="btn btn-lg btn-success" value="Center map">
+				</form>
+				{% if village.name %}
+					<p>Send troops</p>
+					<p>Send resources</p>
+				{% else %}
+					<p>Settle new village here</p>
+				{% endif %}				
+			</div>
+		</div>
+	</div>
+</section>
+
+<!--/#about-company-->
+{% endblock %}

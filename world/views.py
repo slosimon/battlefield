@@ -29,6 +29,10 @@ from django.utils.timezone import utc
 import get_buildings
 from slugify import slugify
 
+def count_messages(request):
+	player = Player.objects.get(user = request.user)
+	return len(Message.objects.filter(read = False, recipent = player))
+
 @login_required
 def fields(request):
 	user = request.user
@@ -72,7 +76,7 @@ def fields(request):
 		queue_name.append(player.last_village.building_2.building.building.name)
 		queue_end.append(player.last_village.building_2.end)
 	queue = zip(queue_name, queue_end)	
-	return render(request, 'game/fields.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'queue':queue})
+	return render(request, 'game/fields.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'queue':queue, 'player':player, 'unread_messages':count_messages(request)})
 	
 @login_required	
 def center(request):
@@ -121,12 +125,13 @@ def center(request):
 		queue_name.append(player.last_village.building_2.building.building.name)
 		queue_end.append(player.last_village.building_2.end)
 	queue = zip(queue_name, queue_end)	
-	return render(request, 'game/center.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'queue':queue})
+	return render(request, 'game/center.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'queue':queue, 'player':player, 'unread_messages':count_messages(request)})
  
 @login_required	
 def pop_ranking(request):
 	players = Player.objects.all().order_by('-population')
 	count = Player.objects.count()
+	player = Player.objects.get(user = request.user)
 	bar = ['Player', 'Villages','Tribe','Population']
 	if count > 20:
 		paginator = Paginator(players, 20)
@@ -141,14 +146,15 @@ def pop_ranking(request):
 		except EmptyPage:
 			users = paginator.page(paginator.num_pages)
 			
-		return render(request, 'game/ranking.html', {'users':users, 'bar':bar})
+		return render(request, 'game/ranking.html', {'users':users, 'bar':bar, 'player':player, 'unread_messages':count_messages(request)})
 	else:
-		return render(request, 'game/ranking.html', {'users':players, 'bar':bar})
+		return render(request, 'game/ranking.html', {'users':players, 'bar':bar, 'player':player, 'unread_messages':count_messages(request)})
 		
 @login_required	
 def attack_ranking(request):
 	players = Player.objects.all().order_by('-attack_points')
 	count = Player.objects.count()
+	player = Player.objects.get(user = request.user)
 	bar = ['Player', 'Villages','Tribe','Attack Points']
 	if count > 20:
 		paginator = Paginator(players, 20)
@@ -163,14 +169,15 @@ def attack_ranking(request):
 		except EmptyPage:
 			users = paginator.page(paginator.num_pages)
 			
-		return render(request, 'game/ranking_attack.html', {'users':users, 'bar':bar})
+		return render(request, 'game/ranking_attack.html', {'users':users, 'bar':bar, 'player':player, 'unread_messages':count_messages(request)})
 	else:
-		return render(request, 'game/ranking_attack.html', {'users':players, 'bar':bar})
+		return render(request, 'game/ranking_attack.html', {'users':players, 'bar':bar, 'player':player, 'unread_messages':count_messages(request)})
 	
 @login_required	
 def def_ranking(request):
 	players = Player.objects.all().order_by('-def_points')
 	count = Player.objects.count()
+	player = Player.objects.get(user = request.user)
 	bar = ['Player', 'Villages','Tribe','Defense Points']
 	if count > 20:
 		paginator = Paginator(players, 20)
@@ -185,9 +192,9 @@ def def_ranking(request):
 		except EmptyPage:
 			users = paginator.page(paginator.num_pages)
 			
-		return render(request, 'game/ranking_def.html', {'users':users, 'bar':bar})
+		return render(request, 'game/ranking_def.html', {'users':users, 'bar':bar, 'player':player, 'unread_messages':count_messages(request)})
 	else:
-		return render(request, 'game/ranking_def.html', {'users':players, 'bar':bar})
+		return render(request, 'game/ranking_def.html', {'users':players, 'bar':bar, 'player':player, 'unread_messages':count_messages(request)})
 	
 @login_required	
 def weekly_ranking(request):
@@ -199,7 +206,8 @@ def weekly_ranking(request):
 	user = Player.objects.get(user = user)
 	one = zip(attack,defo)
 	two = zip(rank,raid)
-	return render(request, 'game/ranking_weekly.html', {'user':user, 'one':one, 'two':two})
+	player = Player.objects.get(user = request.user)
+	return render(request, 'game/ranking_weekly.html', {'user':user, 'one':one, 'two':two, 'player':player, 'unread_messages':count_messages(request)})
 	
 def find_headquarters_bonus(village):
 	pos = ['pos_01','pos_02','pos_03','pos_04','pos_05','pos_06','pos_07','pos_08','pos_09','pos_10','pos_11','pos_12','pos_13','pos_14','pos_15','pos_16','pos_17','pos_18','pos_19','pos_20','pos_21','pos_22','pos_23','pos_24']
@@ -258,8 +266,9 @@ def field(request, pos):
 	except Exception:
 		picture = ('/media/init/img/buildings/none.png')
 
-	return render(request, 'game/field.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok, 'current_production':current_production, 'upgraded_production':upgraded_production})
+	return render(request, 'game/field.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok, 'current_production':current_production, 'upgraded_production':upgraded_production, 'unread_messages':count_messages(request)})
 	
+@login_required	
 def upgrade_field(request, pos):
 	user = request.user
 	player = Player.objects.get(user = user)
@@ -356,7 +365,7 @@ def get_building(request, pos):
 			picture = (buildinga.building.image.url)
 		except Exception:
 			picture = ('/media/init/img/buildings/none.png')
-		return render(request, 'game/building.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok})
+		return render(request, 'game/building.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok, 'unread_messages':count_messages(request)})
 	else:
 		possible = get_buildings.get_possible(player)
 		costa = []
@@ -384,7 +393,7 @@ def get_building(request, pos):
 							tmp = "1"
 					ok.append(tmp)
 		mozne = zip(possible,costa, images, description, ok)
-		return render(request, 'game/new-building.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo, 'mozne':mozne, 'pos':pos, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production,})
+		return render(request, 'game/new-building.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo, 'mozne':mozne, 'pos':pos, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'unread_messages':count_messages(request)})
 			
 def upgrade_building(request, pos):
 	user = request.user
@@ -468,6 +477,7 @@ def build(request,pos,bui):
 		# TODO Remove building
 		return redirect('/center')
 		
+@login_required		
 def maps(request,x,y):
 	x = int(x)
 	y = int(y)
@@ -486,11 +496,11 @@ def maps(request,x,y):
 			ycoords.append(- 2 * settings.MAP_SIZE +i +y -4)
 		else:
 			ycoords.append(i+y-3)
-		print(xcoords,ycoords)
 	ycoords = ycoords[::-1]
 	village = []
 	image = []
 	ok = []
+	player = Player.objects.get(user = request.user)
 	for i in range(7):
 		for j in range (7):
 			try:
@@ -500,22 +510,197 @@ def maps(request,x,y):
 					image.append('/media/villages/village.png')
 				else:
 					image.append('/media/villages/empty-village.png')
-				ok.append(1)
+				ok.append("1")
 			except Exception:
 				try:
 					selo = Oasis.objects.filter(location_latitude = xcoords[j], location_longitude = ycoords[i])[0]
 					village.append(selo)
 					image.append('/media/villages/oasis.png')
-					ok.append(1)
+					ok.append("1")
 				except:
-					ok.append(0)
+					ok.append("0")
 					village.append(0)
 					image.append('/media/villages/empty.png')
 	villages = zip(village,image,ok)
-	return render(request, 'game/map.html', {'villages':villages})
-			
+	return render(request, 'game/map.html', {'villages':villages, 'player':player, 'unread_messages':count_messages(request), 'x':x, 'y':y})
+	
+@login_required			
 def map_zero(request):
 	user = request.user
 	player = Player.objects.get(user = user)
 	last = player.last_village
 	return redirect('/map/x='+str(last.location_latitude)+'y='+str(last.location_longitude)+'/')
+	
+@login_required	
+def gold(request):
+	return render(request,'game/gold.html', {'player':Player.objects.get(user = request.user), 'unread_messages':count_messages(request)}) # TODO expires in template
+	
+@login_required		
+def buy(request,arg):
+	if arg == 'club':
+		player = Player.objects.get(user = request.user)
+		if player.gold >= 100 or player.gold < 0:
+			player.gold -= 100
+			player.bonuses.gold_club = True
+			player.bonuses.save()
+			player.save()
+	if arg == 'plus':
+		player = Player.objects.get(user = request.user)
+		if player.gold >= 10 or player.gold < 0:
+			player.gold -= 10
+			if player.bonuses.plus_account < datetime.utcnow().replace(tzinfo=utc):
+				player.bonuses.plus_account = datetime.utcnow().replace(tzinfo=utc) + timedelta(days = 7)
+			else:
+				player.bonuses.plus_account += timedelta(days = 7)
+			player.bonuses.save()
+			player.save()
+	if arg  == 'oil':
+		player = Player.objects.get(user = request.user)
+		if player.gold >= 5 or player.gold < 0:
+			player.gold -= 5
+			if player.bonuses.oil_bonus_production < datetime.utcnow().replace(tzinfo=utc):
+				player.bonuses.oil_bonus_production = datetime.utcnow().replace(tzinfo=utc) + timedelta(days = 7)
+			else:
+				player.bonuses.oil_bonus_production += timedelta(days = 7)
+			player.bonuses.save()
+			player.save()
+	if arg == 'iron':
+		player = Player.objects.get(user = request.user)
+		if player.gold >= 5 or player.gold < 0:
+			player.gold -= 5
+			if player.bonuses.iron_bonus_production < datetime.utcnow().replace(tzinfo=utc):
+				player.bonuses.iron_bonus_production = datetime.utcnow().replace(tzinfo=utc) + timedelta(days = 7)
+			else:
+				player.bonuses.iron_bonus_production += timedelta(days = 7)
+			player.bonuses.save()
+			player.save()
+	if arg == 'wood':
+		player = Player.objects.get(user = request.user)
+		if player.gold >= 5 or player.gold < 0:
+			player.gold -= 5
+			if player.bonuses.wood_bonus_production < datetime.utcnow().replace(tzinfo=utc):
+				player.bonuses.wood_bonus_production = datetime.utcnow().replace(tzinfo=utc) + timedelta(days = 7)
+			else:
+				player.bonuses.wood_bonus_production += timedelta(days = 7)
+			player.bonuses.save()
+			player.save()
+	if arg == 'food':
+		player = Player.objects.get(user = request.user)
+		if player.gold >= 5 or player.gold < 0:
+			player.gold -= 5
+			if player.bonuses.food_bonus_production < datetime.utcnow().replace(tzinfo=utc):
+				player.bonuses.food_bonus_production = datetime.utcnow().replace(tzinfo=utc) + timedelta(days = 7)
+			else:
+				player.bonuses.food_bonus_production += timedelta(days = 7)
+			player.bonuses.save()
+			player.save()
+	if arg == 'food2':
+		pass
+	if arg == 'build':
+		player = Player.objects.get(user = request.user)
+		if player.last_village.field_1 is not None or player.last_village.building_1 is not None and player.gold >= 2:
+			try:
+				player.last_village.field_1.end = datetime.utcnow().replace(tzinfo=utc)
+				player.last_village.field_1.save()
+			except Exception:
+				pass
+			try:
+				player.last_village.field_2.end = datetime.utcnow().replace(tzinfo=utc)
+				player.last_village.field_2.save()
+			except Exception:
+				pass
+			try:
+				player.last_village.building_1.end = datetime.utcnow().replace(tzinfo=utc)
+				player.last_village.building_1.save()
+			except Exception:
+				pass
+			try:
+				player.last_village.building_2.end = datetime.utcnow().replace(tzinfo=utc)
+				player.last_village.building_1.save()
+			except Exception:
+				pass
+			player.last_village.save()
+			player.gold -= 2
+			player.save()
+	if arg == 'upgrade':
+		pass
+	if arg == 'revive':
+		pass
+	if arg == 'heal':
+		pass
+	if arg == 'trade':
+		pass
+	if arg == '30':
+		player = Player.objects.get(user = request.user)
+		player.gold += 30
+		player.save()
+	if arg == '60':
+		player = Player.objects.get(user = request.user)
+		player.gold += 60
+		player.save()
+	if arg == '120':
+		player = Player.objects.get(user = request.user)
+		player.gold += 120
+		player.save()
+	if arg == '300':
+		player = Player.objects.get(user = request.user)
+		player.gold += 300
+		player.save()
+	if arg == '750':
+		player = Player.objects.get(user = request.user)
+		player.gold += 750
+		player.save()
+	if arg == '2500':
+		player = Player.objects.get(user = request.user)
+		player.gold += 2500
+		player.save()
+	if arg == '7000':
+		player = Player.objects.get(user = request.user)
+		player.gold += 7000
+		player.save()
+	if arg == 'unlimited':
+		player = Player.objects.get(user = request.user)
+		player.gold += 9999999
+		player.save()
+	sleep(1)
+	return redirect('/fields/')
+
+def get_bonus(i):
+	if i== 1:
+		return 'oil'
+	elif i == 2:
+		return 'iron'
+	elif i == 3:
+		return 'wood'
+	else:
+		return 'food'
+
+@login_required		
+def village_view(request,x,y):
+	player = Player.objects.get(user = request.user)
+	x = int(x)
+	y = int(y)
+	try:
+		selo = Village.objects.filter(location_latitude = x, location_longitude = y)[0]
+		return render(request, 'game/village.html', {'village':selo, 'player':player, 'unread_messages':count_messages(request), 'x':x, 'y':y})
+	except Exception:
+		try:
+			selo = Oasis.objects.filter(location_latitude = x, location_longitude = y)[0]
+			
+			army = selo.army.all()[0]
+			l = ['t0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13']
+			names = ['Mosquito', 'Ant', 'Fly', 'Beatle', 'Spider', 'Rat', 'Snake', 'Eagle', 'Wolf', 'Cougar', 'Brown bear', 'Tiger', 'Shark', 'Cow']
+			ll = []
+			namess = []
+			for i in range (14):
+				if getattr(army,l[i]).count > 0:
+					ll.append(getattr(army,l[i]).count)
+					namess.append(names[i])
+			troops = zip(ll,namess)
+			bonuses = []
+			bonuses.append(get_bonus(selo.bonus_1))
+			if selo.bonus_2 is not None:
+				bonuses.append(get_bonus(selo.bonus_2))
+			return render(request, 'game/oasis.html', {'village':selo, 'player':player, 'unread_messages':count_messages(request), 'troops':troops, 'bonuses':bonuses, 'x':x, 'y':y})
+		except:
+			return redirect('/map/x='+str(x)+'y='+str(y)+'/')

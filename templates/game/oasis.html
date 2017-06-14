@@ -1,0 +1,28 @@
+{% extends 'base_game.html' %}
+{% load static %}
+{% block content %}
+<section id="about-company" class="padding-top wow fadeInUp" data-wow-duration="400ms" data-wow-delay="400ms">
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-12 text-center">
+				<h1 class="margin-bottom">{% if village.owner %}Ocupied oasis {% else %} Unocupied oasis {% endif %}</h1>
+				<p>
+				{% for plus in bonuses %}
+					&#09; 25% {{plus}} bonus &#09;
+				{% endfor %}
+				</p>
+				{% for ll, namess in troops %}
+					<p><b>{{ll}}</b> {{namess}}</p>
+				{% endfor %}
+				<form method="POST" action="/map/x={{x}}y={{y}}/">
+					{% csrf_token %}
+					<input type="submit" class="btn btn-lg btn-success" value="Center map">
+				</form>
+				<p>Raid oasis</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!--/#about-company-->
+{% endblock %}

@@ -23,6 +23,7 @@ from world import views as main_views
 from django.contrib.auth import views as auth_views 
 from world import update
 from threading import Thread
+import sys
 #from djutils.decorators import async
 
 urlpatterns = [
@@ -48,19 +49,24 @@ urlpatterns = [
 	url(r'^center/(?P<pos>[0-9o-s_]+)/upgrade/$', main_views.upgrade_building, name = 'upbuilding'),
 	url(r'^map/$', main_views.map_zero, name = 'map'),
 	url(r'^map/x=(?P<x>[0-9-]+)y=(?P<y>[0-9-]+)/$', main_views.maps, name = 'map'),
+	url(r'^village/x=(?P<x>[0-9-]+)y=(?P<y>[0-9-]+)/$', main_views.village_view, name = 'village'),
 	url(r'^center/(?P<pos>[0-9o-s_]+)/(?P<bui>[0-9A-Za-z-]+)/$', main_views.build, name = 'build'),
-	url(r'^map_init/$', world_views.init_map, name = 'map_init'), #Works
-    url(r'^admin/', admin.site.urls),
+	url(r'^gold/$', main_views.gold, name = 'gold'),
+	url(r'^gold/(?P<arg>[0-9a-z]+)/$', main_views.buy, name = 'buy'),
+	url(r'^admin/', admin.site.urls),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler404='battlefield.views.handler404'
+if sys.argv[1] == 'runserver':
+	t = Thread(target = world_views.init_map(), args = (), kwargs = {})
+	t.setDaemon(True)
+	t.start()
+	
+	#@async
+	t = Thread(target = update.queue, args = (), kwargs = {})
+	t.setDaemon(True)
+	t.start()
 
-#@async
-t = Thread(target = update.queue, args = (), kwargs = {})
-t.setDaemon(True)
-t.start()
-
-t = Thread(target = update.population, args = (), kwargs = {})
-t.setDaemon(True)
-t.start()
-
+	t = Thread(target = update.population, args = (), kwargs = {})
+	t.setDaemon(True)
+	t.start()

@@ -13,7 +13,20 @@
     <link href="{% static 'css/lightbox.css'%}" rel="stylesheet"> 
 	<link href="{% static 'css/main.css'%}" rel="stylesheet">
 	<link href="{% static 'css/responsive.css'%}" rel="stylesheet">
+	<script type="text/javascript">
+		function display_c(){
+			var refresh=1000; // Refresh rate in milli seconds
+			mytime=setTimeout('display_ct()',refresh)
+		}
+		function display_ct() {
+			var strcount
+			var x = new Date()
+			var x1=x.getHours( )+ ":" + x.getMinutes() + ":" + x.getSeconds();
+			document.getElementById('ct').innerHTML = x1;
 
+			tt=display_c();
+		} 
+	</script>
     <!--[if lt IE 9]>
 	    <script src="js/html5shiv.js"></script>
 	    <script src="js/respond.min.js"></script>
@@ -26,7 +39,7 @@
     {% block js %} {% endblock %}
 </head><!--/head-->
 
-<body>
+<body onload=display_ct()>
 	<header id="header">      
         <div class="container">
             <div class="row">
@@ -59,6 +72,7 @@
                 </div>
                 <div class="collapse navbar-collapse">
                     <ul class="nav navbar-nav navbar-right">
+						<li>Server time (UTC): <span id='ct' ></span></li>
                         <li><a href="/fields/">Fields</a></li>
                         <li><a href="/center/">Center </a></li>                    
                         <li class="dropdown"><a href="#">Statistics <i class="fa fa-angle-down"></i></a>
@@ -77,8 +91,20 @@
                         </li>
                         <li><a href="/map/">Map</a></li>
                         <li><a href="/reports/">Reports</a></li>
-                        <li><a href="/messages/">Messages</a></li>
-                        <li><a href="/gold/">Gold</a></li>                                            
+                        <li><a href="/messages/">Messages ({{unread_messages}})</a></li>
+                        <li><a href="/gold/">Gold ({{player.gold}})</a></li> 
+                        {% if player.population > 50 %}
+							<li class="dropdown"><a href="#">Alliance <i class="fa fa-angle-down"></i></a>
+								<ul role="menu" class="sub-menu">
+									{% if player.in_ally %}
+										<li><a href="/ally/">Alliance</a></li>
+									{% else %}
+										<li><a href="/invitations/">Invitations</a></li>
+										<li><a href="/create/">Create new</a></li>
+									{% endif %}
+								</ul>
+							</li>
+						{% endif %}
                     </ul>
                 </div>
             </div>

@@ -16,12 +16,15 @@ import urllib2
 from django.contrib import messages
 from django.conf import settings
 from world.initialize_model import map_init, tribe_init, buildings_init, fields_init
+from world.init_troops import initialize as initialize_troops
 from world.functions import *
 from django.contrib.admin.views.decorators import staff_member_required
 from datetime import datetime
 import operator
 from django.contrib.auth.decorators import login_required
 import building.models 
+import time
+from django.utils.timezone import utc
 
 def register(request):
 	if request.method == 'POST':
@@ -92,6 +95,7 @@ def activate(request, uidb64, token):
 				best = selo
 		player.villages.add(best)
 		player.last_village = best
+		player.last_update = datetime.utcnow().replace(tzinfo=utc)
 		best.name = player.user.username+"'s village"
 		best.population = 2
 		village_start(player, best)
@@ -110,9 +114,15 @@ def login(request):
 	else:
 		return render(request, 'game/login.html')
 
-#@staff_member_required
-def init_map(request):
+def init_map():
+	start = time.time()
+	from django.contrib.sites.models import Site
+	if Site.objects.count() < 2:	
+		
+		new_site = Site.objects.create(domain=settings.URL, name=settings.URL)
+		print new_site.id
 	if Village.objects.count() == 0:
+		print(Village.objects.count())
 		map_init()
 	if building.models.Building.objects.count() == 0:
 		buildings_init()
@@ -120,4 +130,8 @@ def init_map(request):
 		tribe_init()
 	if building.models.Field.objects.count() == 0:
 		fields_init()
+	if Troop.objects.count() == 0:
+		initialize_troops()
+	end = time.time()
+	print(end-start)
 	return redirect('/')

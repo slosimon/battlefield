@@ -89,7 +89,7 @@
                     <div class="action count">
 						{% for q,e in queue %}
                         <div class="col-sm-3 text-center wow bounceIn" data-wow-duration="1000ms" data-wow-delay="300ms">
-                            <p>{{q}} {{e|time:"N j H:M:S"}}</p>
+                            <p>{{q}} ({{e|date:"N j, H:i:s" }})</p>
                         </div>
                         {% endfor %}
                     </div>
