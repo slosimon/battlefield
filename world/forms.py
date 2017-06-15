@@ -37,3 +37,10 @@ class SignUpForm(UserCreationForm):
 	class Meta:
 		model = User
 		fields = ('username', 'email', 'password1', 'password2', 'select_tribe', 'start_location', )
+
+class MessageForm(forms.Form):
+	recipent = forms.CharField(max_length=55, help_text=_('To:'))
+	subject = forms.CharField(max_length = 50, help_text=_('Subject'))
+	message = forms.CharField(max_length = 10*10, help_text = _('Message'))
+	class Meta:
+		fields = ('recipent', 'subject', 'message')

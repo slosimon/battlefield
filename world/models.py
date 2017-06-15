@@ -9,6 +9,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import building
 import troops
+from django.conf import settings
+
 # Create your models here.
 
 class Tribe(models.Model):
@@ -438,7 +440,8 @@ class Message(models.Model):
 	recipent = models.ForeignKey(Player, related_name="Recipent")
 	content = models.TextField(max_length = 10**10)
 	subject = models.CharField(max_length = 255)
-	read = models.BooleanField()
+	read = models.BooleanField(default = False)
+	timestamp = models.DateTimeField(default = settings.START)
 	
 class Ally_leadership(models.Model):
 	leader = models.ForeignKey(Player)

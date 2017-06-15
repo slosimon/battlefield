@@ -21,7 +21,7 @@
 		function display_ct() {
 			var strcount
 			var x = new Date()
-			var x1=x.getHours( )+ ":" + x.getMinutes() + ":" + x.getSeconds();
+			var x1=x.getHours( )+ ":" + ("0" + x.getMinutes()).slice(-2) + ":" + ("0" + x.getSeconds()).slice(-2)
 			document.getElementById('ct').innerHTML = x1;
 
 			tt=display_c();
@@ -91,8 +91,15 @@
                         </li>
                         <li><a href="/map/">Map</a></li>
                         <li><a href="/reports/">Reports</a></li>
-                        <li><a href="/messages/">Messages ({{unread_messages}})</a></li>
-                        <li><a href="/gold/">Gold ({{player.gold}})</a></li> 
+                        <li><a href="#">Messages ({{unread_messages}})<i class="fafa-angle-down"></i></a>
+							<ul role="menu" class="sub-menu">
+								<li><a href="/messages/inbox/">Inbox</a></li>
+								<li><a href="/messages/write/">Write new</a></li>
+								<li><a href="/messages/sent/">Sent</a></li>
+								<li><a href="/messages/notes/">Notes</a></li>
+							</ul>
+                        </li>
+                        <li><a href="/gold/">Gold {% if player.gold > -1 %}({{player.gold}}){% else %} (&#8734;) {% endif %}</a></li> 
                         {% if player.population > 50 %}
 							<li class="dropdown"><a href="#">Alliance <i class="fa fa-angle-down"></i></a>
 								<ul role="menu" class="sub-menu">

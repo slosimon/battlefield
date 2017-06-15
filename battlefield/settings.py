@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'building',
     'troops',
     'hero',
+    'precise_bbcode',
 ]
 
 MIDDLEWARE = [
@@ -133,7 +134,10 @@ LOGIN_REDIRECT_URL = '/fields/'
 DATETIME_FORMAT = 'N j, Y H:i:s' 
 TIME_FORMAT = 'H:i:s'
 DATE_FORMAT = 'N j, Y'
-
+from datetime import datetime
+from django.utils import timezone
+from django.utils.timezone import utc
+START = timezone.make_aware(datetime(2017,06,15,12,00,00),utc)
 try:
     from local_settings import *
 except ImportError:

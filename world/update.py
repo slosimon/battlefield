@@ -12,10 +12,13 @@ def update_real(village):
 	village.real_production.iron = village.production.iron * (100.0+ village.bonus.iron)/100
 	village.real_production.wood = village.production.wood * (100.0+ village.bonus.wood)/100
 	village.real_production.food = village.free_crop * (100.0+ village.bonus.food)/100
+	village.real_production.save()
+	village.save()
 	
 def update_res(village):
 	now = datetime.utcnow().replace(tzinfo=utc)
 	time_delta = (now - village.update).total_seconds()
+	update_real(village)
 	income = village.real_production
 	holding = village.resources
 	warehouse = village.storage_capacity

@@ -60,7 +60,7 @@ def fields(request):
 	iron = int(float(resources.iron) / warehouse * 100)
 	wood = int(float(resources.wood) / warehouse * 100)
 	food = int(float(resources.food) / silo * 100)
-	production = player.last_village.production
+	production = player.last_village.real_production
 	queue_name = []
 	queue_end = []
 	if player.last_village.field_1 is not None:
@@ -109,7 +109,7 @@ def center(request):
 	iron = int(float(resources.iron) / warehouse * 100)
 	wood = int(float(resources.wood) / warehouse * 100)
 	food = int(float(resources.food) / silo * 100)
-	production = player.last_village.production
+	production = player.last_village.real_production
 	queue_name = []
 	queue_end = []
 	if player.last_village.field_1 is not None:
@@ -232,7 +232,7 @@ def field(request, pos):
 	iron = int(float(resources.iron) / warehouse * 100)
 	wood = int(float(resources.wood) / warehouse * 100)
 	food = int(float(resources.food) / silo * 100)
-	production = player.last_village.production
+	production = player.last_village.real_production
 	field = getattr(player.last_village.fields, pos)
 	current_lvl = field.lvl
 	if player.last_village.field_1 is not None:
@@ -334,7 +334,7 @@ def get_building(request, pos):
 	iron = int(float(resources.iron) / warehouse * 100)
 	wood = int(float(resources.wood) / warehouse * 100)
 	food = int(float(resources.food) / silo * 100)
-	production = player.last_village.production
+	production = player.last_village.real_production
 	buildinga = getattr(player.last_village.center, pos)
 	if buildinga is not None:
 		current_lvl = buildinga.lvl
@@ -598,7 +598,7 @@ def buy(request,arg):
 		pass
 	if arg == 'build':
 		player = Player.objects.get(user = request.user)
-		if player.last_village.field_1 is not None or player.last_village.building_1 is not None and player.gold >= 2:
+		if player.last_village.field_1 is not None or player.last_village.building_1 is not None and player.gold >= 2 or player.gold < 0:
 			try:
 				player.last_village.field_1.end = datetime.utcnow().replace(tzinfo=utc)
 				player.last_village.field_1.save()
@@ -616,7 +616,7 @@ def buy(request,arg):
 				pass
 			try:
 				player.last_village.building_2.end = datetime.utcnow().replace(tzinfo=utc)
-				player.last_village.building_1.save()
+				player.last_village.building_2.save()
 			except Exception:
 				pass
 			player.last_village.save()
@@ -660,7 +660,7 @@ def buy(request,arg):
 		player.save()
 	if arg == 'unlimited':
 		player = Player.objects.get(user = request.user)
-		player.gold += 9999999
+		player.gold = -1
 		player.save()
 	sleep(1)
 	return redirect('/fields/')

@@ -1,54 +1,6 @@
-{% extends 'base_game.html' %}
+{% extends 'resource.html' %}
 {% load static %}
-{% block content %}
-<section id="page-breadcrumb">
-	<div class="vertical-center sun">
-		 <div class="container">
-			<div class="row">
-				<div class="action">
-					<div class="col-sm-12">
-						<h1 class="title">{{player.user.username}}</h1>
-						<p>{{village_name}}</p>
-					</div>
-				</div>
-			</div>
-			<div class="container">
-				<div class="our-skills">
-					<h2 class="bold">Resources</h2>
-					<div class="col-xs-4 col-sm-4 col-md-3">
-						<h3>Oil ({{resources.oil| floatformat:"0"}} / {{warehouse}})</h3>
-						<h3>{{production.oil| floatformat:"0"}} / hour</h3>
-						<div class="progress">
-							<div class="progress-bar progress-bar-primary six-sec-ease-in-out" role="progressbar"  data-transition="{{oil}}">{{oil}}%</div>
-						</div>
-					</div>
-					<div class="col-xs-4 col-sm-4 col-md-3">
-						<h3>Iron ({{resources.iron| floatformat:"0"}} / {{warehouse}})</h3>
-						<h3>{{production.iron| floatformat:"0"}} / hour</h3>
-						<div class="progress">
-							<div class="progress-bar progress-bar-primary six-sec-ease-in-out" role="progressbar"  data-transition="{{iron}}">{{iron}}%</div>
-						</div>
-					</div>
-					<div class="col-xs-4 col-sm-4 col-md-3">
-						<h3>Wood ({{resources.wood| floatformat:"0"}} / {{warehouse}})</h3>
-						<h3>{{production.wood| floatformat:"0"}} / hour</h3>
-						<div class="progress">
-							<div class="progress-bar progress-bar-primary six-sec-ease-in-out" role="progressbar"  data-transition="{{wood}}">{{wood}}%</div>
-						</div>
-					</div>
-					<div class="col-xs-4 col-sm-4 col-md-3">
-						<h3>Food ({{resources.food| floatformat:"0"}} / {{silo}})</h3>
-						<h3>{{production.food| floatformat:"0"}} / hour</h3>
-						<div class="progress">
-							<div class="progress-bar progress-bar-primary six-sec-ease-in-out" role="progressbar"  data-transition="{{food}}">{{food}}%</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</section>
-<!--/#action-->
+{% block contenta %}
 
  <section id="services">
         <div class="container">
