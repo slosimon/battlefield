@@ -1,0 +1,34 @@
+{% extends 'base_game.html' %}
+{% load static %}
+{% load negative %}
+{% block content %}
+
+     <section id="coming-soon">        
+         <div class="container">
+            <div class="row">
+                <div class="col-sm-8 col-sm-offset-1">                    
+                    <div class="text-center coming-content">
+                        <h1>Messages</h1>
+                        <table style="width:100%">
+							<tr>
+								<th></th>
+								<th>To</th>
+								<th>Subject</th>
+								<th>Time</th>
+							</tr>							
+							{% for message in messages %}
+							<tr onclick="window.document.location='/messages/{{message.id}}/';">
+								<td>{% if message.read %}<i class="fa fa-file-text fa-3x" style="border:hidden;text-align:center;"></i>{% else %}<i class="fa fa-file-text-o fa-3x" style="border:hidden;text-align:center;"></i>{% endif %}</td>
+								<td>{{message.recipent.user.username}}</td>
+								<td>{{message.subject}}</td>
+								<td>{{message.timestamp}}</td>
+							</tr>
+							{% endfor %}
+							
+						</table>
+                    </div>                    
+                </div>
+            </div>
+        </div>       
+    </section>
+ {% endblock %}

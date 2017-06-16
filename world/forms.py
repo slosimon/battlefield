@@ -41,6 +41,6 @@ class SignUpForm(UserCreationForm):
 class MessageForm(forms.Form):
 	recipent = forms.CharField(max_length=55, help_text=_('To:'))
 	subject = forms.CharField(max_length = 50, help_text=_('Subject'))
-	message = forms.CharField(max_length = 10*10, help_text = _('Message'))
+	message = forms.CharField(max_length = 10*10, help_text = _('Message'), widget=forms.Textarea)
 	class Meta:
 		fields = ('recipent', 'subject', 'message')

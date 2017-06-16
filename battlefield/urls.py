@@ -20,6 +20,7 @@ from home import views as views_home
 from django.conf.urls.static import static
 from world import init_views as world_views
 from world import views as main_views 
+from world import message_views as message_views
 from django.contrib.auth import views as auth_views 
 from world import update
 from threading import Thread
@@ -53,6 +54,11 @@ urlpatterns = [
 	url(r'^center/(?P<pos>[0-9o-s_]+)/(?P<bui>[0-9A-Za-z-]+)/$', main_views.build, name = 'build'),
 	url(r'^gold/$', main_views.gold, name = 'gold'),
 	url(r'^gold/(?P<arg>[0-9a-z]+)/$', main_views.buy, name = 'buy'),
+	url(r'^messages/inbox/$', message_views.inbox, name ='inbox'),
+	url(r'^messages/write/$', message_views.send, name ='write'),
+	url(r'^messages/write/(?P<mes>[0-9]+)/$', message_views.reply, name ='write'),
+	url(r'^messages/sent/$', message_views.sent, name ='sent'),
+	url(r'^messages/(?P<mes>[0-9]+)/$', message_views.view_message, name ='view'),
 	url(r'^admin/', admin.site.urls),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

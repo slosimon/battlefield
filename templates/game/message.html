@@ -1,0 +1,27 @@
+{% extends 'base_game.html' %}
+{% load static %}
+{% load negative %}
+{% load bbcode_tags %}
+{% block content %}
+
+<section id="coming-soon">        
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-8 col-sm-offset-1">                    
+				<div class="coming-content">
+					<h1>{{message.sender.user.username}}</h1>
+					<h2>Subject: {{message.subject}}</h2>
+					<h2>Time: {{message.timestamp}}</h2>
+					
+					<p>{{ message.content|linebreaks }}</p>
+					<form method="GET" action="/messages/write/{{message.id}}/">
+						{% csrf_token %}
+						<input type="submit" class="btn btn-lg btn-success" value="Reply" name="">
+					</form>
+				</div>
+			</div> 
+		</div>
+	</div>       
+</section>
+{% endblock %}
+

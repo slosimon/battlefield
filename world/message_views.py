@@ -42,8 +42,11 @@ def send(request):
 		form = MessageForm(request.POST)
 		if form.is_valid():
 			parser = get_parser()
-			if len(Player.objects.filter(user.username = form.cleaned_data.get('recipent')) > 0:
-				Message.objects.create(sender = player, recipent = Player.objects.filter(user.username = form.cleaned_data.get('recipent'))[0], subject = form.cleaned_data.get('subject'), content = parser.render(form.cleaned_data.get('content')), timestamp = datetime.utcnow().replace(tzinfo=utc))
+			print(form.cleaned_data.get('recipent'))
+			string = form.cleaned_data.get('recipent')
+			user = User.objects.filter(username = string)
+			if len(user) > 0:
+				Message.objects.create(sender = player, recipent = Player.objects.filter(user=user)[0], subject = form.cleaned_data.get('subject'), content = (form.cleaned_data.get('message')), timestamp = datetime.utcnow().replace(tzinfo=utc))
 			elif form.cleaned_data.get('recipent') == '[MM]':
 				pass # TODO MM
 			return redirect ('/messages/inbox/')
@@ -55,6 +58,7 @@ def send(request):
 def inbox(request):
 	player = Player.objects.get(user = request.user)
 	messages = Message.objects.filter(recipent = player).order_by('-timestamp')
+	print(messages)
 	return render(request, 'game/inbox.html', {'player':player, 'unread_messages':count_messages(request), 'messages':messages})
 	
 @login_required
@@ -62,7 +66,10 @@ def view_message(request, mes):
 	message = Message.objects.get(id = mes)
 	player = Player.objects.get(user = request.user)
 	if player == message.recipent or player == message.sender:
-		return render(request, 'game/inbox.html', {'player':player, 'unread_messages':count_messages(request), 'message':message})
+		if player == message.recipent:
+			message.read = True
+		message.save()
+		return render(request, 'game/message.html', {'player':player, 'unread_messages':count_messages(request), 'message':message})
 	else:
 		return redirect('/messages/inbox/')
 
@@ -70,4 +77,30 @@ def view_message(request, mes):
 def sent(request):
 	player = Player.objects.get(user = request.user)
 	messages = Message.objects.filter(sender = player).order_by('-timestamp')
-	return render(request, 'game/inbox.html', {'player':player, 'unread_messages':count_messages(request), 'messages':messages})		
+	return render(request, 'game/sent.html', {'player':player, 'unread_messages':count_messages(request), 'messages':messages})
+
+@login_required
+def reply(request, mes):
+	message = message = Message.objects.get(id = mes)
+	player = Player.objects.get(user = request.user)
+	if player == message.recipent or player == message.sender:
+		if request.method == 'POST':
+			form = MessageForm(request.POST)
+			if form.is_valid():
+				parser = get_parser()
+				print(form.cleaned_data.get('recipent'))
+				string = form.cleaned_data.get('recipent')
+				user = User.objects.filter(username = string)
+				if len(user) > 0:
+					Message.objects.create(sender = player, recipent = Player.objects.filter(user=user)[0], subject = form.cleaned_data.get('subject'), content = (form.cleaned_data.get('message')), timestamp = datetime.utcnow().replace(tzinfo=utc))
+				elif form.cleaned_data.get('recipent') == '[MM]':
+					pass # TODO MM
+				return redirect ('/messages/inbox/')
+		else:
+			text = '\n_____'+str(message.sender.user.username)+' wrote:_____\n'
+			text += str(message.content)
+			
+			form = MessageForm(initial={'recipent':str(message.sender.user.username), 'subject':str(message.subject), 'message':text})
+		return render(request, 'game/new_message.html', {'player':player, 'unread_messages':count_messages(request), 'form':form})
+	else:
+		return redirect('/messages/inbox/')

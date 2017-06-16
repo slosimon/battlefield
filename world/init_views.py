@@ -25,6 +25,7 @@ from django.contrib.auth.decorators import login_required
 import building.models 
 import time
 from django.utils.timezone import utc
+from django.core.mail import EmailMessage
 
 def register(request):
 	if request.method == 'POST':
@@ -51,7 +52,6 @@ def register(request):
 			player.old_rank = 2
 			player.location = form.cleaned_data.get('start_location')
 			player.activation_key = account_activation_token.make_token(user)
-			print(urlsafe_base64_encode(force_bytes(user.pk)))
 			player.save()
 			current_site = get_current_site(request)
 			subject = 'Activate Your MySite Account'
@@ -61,9 +61,11 @@ def register(request):
 				'uid': urlsafe_base64_encode(force_bytes(user.pk)),
 				'token': account_activation_token.make_token(user),
 			})
-			user.email_user(subject, message)
+			email = EmailMessage(subject, message, to=[form.cleaned_data.get('email')])
+			print(email)
+			email.send()
 				
-			return redirect('/login/')
+			return HttpResponse('Please confirm your email address to complete the registration')
 			
 	else:
 		form = SignUpForm()

@@ -41,6 +41,12 @@
                             <p>{{q}} ({{e|date:"N j, H:i:s" }})</p>
                         </div>
                         {% endfor %}
+                        {% if ok %}
+                        <form method="POST" action="/gold/build/">
+						{% csrf_token %}
+							<input type="submit" class="btn btn-lg btn-success" value="Upgrade all buildings now" name="">
+						</form>
+						{% endif %}
                     </div>
                 </div>
             </div>

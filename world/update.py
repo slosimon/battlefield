@@ -116,8 +116,7 @@ def queue(): # TODO when army system
 						villages[0].save()
 						players = []
 						continue
-						
-					if villages[0].field_1.end >= villages[0].building_1.end and villages[0].building_1.end <= datetime.utcnow().replace(tzinfo=utc):
+					if villages[0].field_1.end > villages[0].building_1.end and villages[0].building_1.end <= datetime.utcnow().replace(tzinfo=utc):
 						update_building(villages[0], villages[0].building_1.building, villages[0].building_1.to)
 						if villages[0].building_2 is not None:
 							villages[0].building_1 = villages[0].building_2
@@ -178,8 +177,8 @@ def queue(): # TODO when army system
 						else:
 							villages[0].building_1 = None
 						villages[0].building_2 = None
-						if villages[0].building_2 is not None:
-							villages[0].next_update = building_1.end
+						if villages[0].building_1 is not None:
+							villages[0].next_update = villages[0].building_1.end
 						else:
 							villages[0].next_update = None
 						villages[0].save()
@@ -196,7 +195,7 @@ def queue(): # TODO when army system
 			player.save()
 		else:
 			
-			sleep(10)
+			sleep(1)
 			
 def population():
 	while True:

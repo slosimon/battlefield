@@ -75,8 +75,12 @@ def fields(request):
 	if player.last_village.building_2 is not None:
 		queue_name.append(player.last_village.building_2.building.building.name)
 		queue_end.append(player.last_village.building_2.end)
-	queue = zip(queue_name, queue_end)	
-	return render(request, 'game/fields.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'queue':queue, 'player':player, 'unread_messages':count_messages(request)})
+	queue = zip(queue_name, queue_end)
+	ok = False
+	if len(queue_name) > 0 :
+		if player.gold >= 2 or player.gold < 0 :
+			ok = True	
+	return render(request, 'game/fields.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'queue':queue, 'player':player, 'unread_messages':count_messages(request), 'ok':ok})
 	
 @login_required	
 def center(request):
@@ -124,8 +128,12 @@ def center(request):
 	if player.last_village.building_2 is not None:
 		queue_name.append(player.last_village.building_2.building.building.name)
 		queue_end.append(player.last_village.building_2.end)
-	queue = zip(queue_name, queue_end)	
-	return render(request, 'game/center.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'queue':queue, 'player':player, 'unread_messages':count_messages(request)})
+	queue = zip(queue_name, queue_end)
+	ok = False
+	if len(queue_name) > 0 :
+		if player.gold >= 2 or player.gold < 0 :
+			ok = True
+	return render(request, 'game/center.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'queue':queue, 'player':player, 'unread_messages':count_messages(request), 'ok':ok})
  
 @login_required	
 def pop_ranking(request):
@@ -445,6 +453,8 @@ def upgrade_building(request, pos):
 	return redirect ('/center/')
 	
 def build(request,pos,bui):
+	if bui == 'heros-birth-house':
+		bui = 'hero-s-birth-house'
 	user = request.user
 	player = Player.objects.get(user = user)
 	
@@ -465,6 +475,7 @@ def build(request,pos,bui):
 			buildinga.building = bajta
 			buildinga.lvl = 0
 	buildinga.save()
+	print(buildinga.building)
 	cena = building.models.Building.objects.filter(name = buildinga.building)
 	cena = cena[0].cost.filter(level = 1)
 	cena = cena[0]
@@ -533,7 +544,11 @@ def map_zero(request):
 	
 @login_required	
 def gold(request):
-	return render(request,'game/gold.html', {'player':Player.objects.get(user = request.user), 'unread_messages':count_messages(request)}) # TODO expires in template
+	if Player.objects.get(user = request.user).gold < 0:
+		ok = False
+	else:
+		ok = True
+	return render(request,'game/gold.html', {'player':Player.objects.get(user = request.user), 'unread_messages':count_messages(request), 'ok':ok}) # TODO expires in template
 	
 @login_required		
 def buy(request,arg):
@@ -599,28 +614,30 @@ def buy(request,arg):
 	if arg == 'build':
 		player = Player.objects.get(user = request.user)
 		if player.last_village.field_1 is not None or player.last_village.building_1 is not None and player.gold >= 2 or player.gold < 0:
+			counter = 0
 			try:
 				player.last_village.field_1.end = datetime.utcnow().replace(tzinfo=utc)
 				player.last_village.field_1.save()
 			except Exception:
-				pass
+				counter +=1
 			try:
 				player.last_village.field_2.end = datetime.utcnow().replace(tzinfo=utc)
 				player.last_village.field_2.save()
 			except Exception:
-				pass
+				counter +=1
 			try:
 				player.last_village.building_1.end = datetime.utcnow().replace(tzinfo=utc)
 				player.last_village.building_1.save()
 			except Exception:
-				pass
+				counter +=1
 			try:
 				player.last_village.building_2.end = datetime.utcnow().replace(tzinfo=utc)
 				player.last_village.building_2.save()
 			except Exception:
-				pass
+				counter +=1
 			player.last_village.save()
-			player.gold -= 2
+			if counter < 4:
+				player.gold -= 2
 			player.save()
 	if arg == 'upgrade':
 		pass

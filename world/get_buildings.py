@@ -176,7 +176,7 @@ def get_possible(player):
 				
 		if bajta[0] == 'University' and bajta[1] >= 5:
 			for kuca in bajte:
-				if kuca[0] == 'Ammunition workshop' and kuca[11] >= 3:
+				if kuca[0] == 'Ammunition workshop' and kuca[1] >= 3:
 					
 					ok = True
 					for i in bajte:
