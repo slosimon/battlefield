@@ -454,6 +454,8 @@ class Alliance(models.Model):
 	leadership = models.ManyToManyField(Ally_leadership)
 	medals = models.ManyToManyField(Medals)
 	old_population = models.IntegerField()
+	name = models.CharField(default = "ABC", unique = True, max_length = 26)
+	short_name = models.CharField(default="ABC", max_length = 6)
 	
 class Invitation(models.Model):
 	ally = models.ForeignKey(Alliance)

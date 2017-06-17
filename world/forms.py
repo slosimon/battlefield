@@ -44,3 +44,9 @@ class MessageForm(forms.Form):
 	message = forms.CharField(max_length = 10*10, help_text = _('Message'), widget=forms.Textarea)
 	class Meta:
 		fields = ('recipent', 'subject', 'message')
+
+class AllyForm(forms.Form):
+	name = forms.CharField(max_length= 25, help_text=_('Alliance name'))
+	short_name = forms.CharField(max_length= 5, help_text=_('Alliance shortname'))
+	class Meta:
+		fields = ('name', 'short_name')
