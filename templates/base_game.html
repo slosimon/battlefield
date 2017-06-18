@@ -91,7 +91,7 @@
                         </li>
                         <li><a href="/map/">Map</a></li>
                         <li><a href="/reports/">Reports</a></li>
-                        <li><a href="/messages/inbox/">Messages ({{unread_messages}})<i class="fafa-angle-down"></i></a>
+                        <li><a href="/messages/inbox/">Messages ({{messages_count}})<i class="fafa-angle-down"></i></a>
 							<ul role="menu" class="sub-menu">
 								<li><a href="/messages/inbox/">Inbox</a></li>
 								<li><a href="/messages/write/">Write new</a></li>
@@ -99,16 +99,17 @@
 								<li><a href="/messages/notes/">Notes</a></li>
 							</ul>
                         </li>
-                        <li><a href="/gold/">Gold {% if player.gold > -1 %}({{player.gold}}){% else %} (&#8734;) {% endif %}</a></li> 
+                        <li><a href="/gold/">Gold {% if gold > -1 %}({{gold}}){% else %} (&#8734;) {% endif %}</a></li> 
                         {% if player.population > 50 %}
-							<li class="dropdown"><a href="#">Alliance <i class="fa fa-angle-down"></i></a>
+							<li class="dropdown"><a href="#">Alliance <em id="invitations"></em><i class="fa fa-angle-down"></i></a>
 								<ul role="menu" class="sub-menu">
 									{% if player.in_ally %}
-										<li><a href="/ally/">Alliance</a></li>
+										<li><a href="/ally/">Alliance </a></li>
 									{% else %}
-										<li><a href="/invitations/">Invitations</a></li>
+										
 										<li><a href="/create/">Create new</a></li>
 									{% endif %}
+									<li><a href="/invitations/">Invitations {{ invitations }}</a></li>
 								</ul>
 							</li>
 						{% endif %}
@@ -118,7 +119,6 @@
         </div>
     </header>
     <!--/#header-->
-
     {%block content%}{%endblock%}
 
     <footer id="footer">

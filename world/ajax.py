@@ -27,36 +27,21 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.timezone import utc
 import get_buildings
+from precise_bbcode.bbcode import get_parser
+from django.http import JsonResponse
 from slugify import slugify
 
 def count_messages(request):
 	player = Player.objects.get(user = request.user)
 	return len(Message.objects.filter(read = False, recipent = player))
 
-@login_required	
-def create(request):
+def invitations(request):
 	player = Player.objects.get(user = request.user)
-	if request.method == 'POST':
-		form = AllyForm(request.POST)
-		if form.is_valid():
-			leader = Ally_leadership.objects.create(leader = player, position = 'Founder', mm_rights = True, diplomacy = True)
-			ally = Alliance.objects.create(name = form.cleaned_data.get('name'), short_name = form.cleaned_data.get('short_name'), old_population = player.population)
-			ally.leadership.add(leader)
-			ally.member.add(player)
-			ally.save()
-			player.in_ally = True
-			player.save()
-			return redirect ('/fields/')
-	else:
-		form = AllyForm()
-	return render(request, 'game/new_ally.html', {'player':player, 'unread_messages':count_messages(request), 'form':form})
-
-@login_required
-def ally(request):
-	player = Player.objects.get(user = request.user)
-	if player.in_ally:
-		ally = Aliiance.objects.filter(member__in = player)
-		return render(request, 'game/ally.html', {'player':player, 'ally':ally})
-	else:
-		return redirect('/fields/')
-	
+	total = len(Invitation.objects.filter(invited = player))
+	response_data ={}
+	response_data['invitations'] = total
+	response_data['gold'] = player.gold
+	print(len(Message.objects.filter(read = False, recipent = player)))
+	response_data['messages_count'] = count_messages(request)
+	print(response_data)
+	return (response_data)

@@ -456,6 +456,7 @@ class Alliance(models.Model):
 	old_population = models.IntegerField()
 	name = models.CharField(default = "ABC", unique = True, max_length = 26)
 	short_name = models.CharField(default="ABC", max_length = 6)
+	description = models.TextField(default = None, null = True)
 	
 class Invitation(models.Model):
 	ally = models.ForeignKey(Alliance)

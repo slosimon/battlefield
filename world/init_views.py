@@ -64,8 +64,8 @@ def register(request):
 			email = EmailMessage(subject, message, to=[form.cleaned_data.get('email')])
 			print(email)
 			email.send()
-				
-			return HttpResponse('Please confirm your email address to complete the registration')
+			return redirect('/')	
+			#return HttpResponse('Please confirm your email address to complete the registration')
 			
 	else:
 		form = SignUpForm()

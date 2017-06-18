@@ -50,3 +50,16 @@ class AllyForm(forms.Form):
 	short_name = forms.CharField(max_length= 5, help_text=_('Alliance shortname'))
 	class Meta:
 		fields = ('name', 'short_name')
+		
+class InviteForm(forms.Form):
+	player = forms.CharField(max_length= 25, help_text=_('Invite player:'))
+	class Meta:
+		fields = ('player')
+
+class SetLeader(forms.Form):
+	leader = forms.CharField(max_length= 25, help_text=_("Player's name"))
+	position = forms.CharField(max_length= 25, help_text=_("Position"))
+	mm_rights = forms.BooleanField(help_text=_("Mass message rights"))
+	diplomacy_rights = forms.BooleanField(help_text=_("Diplomacy rights"))
+	class Meta:
+		fields = ('leader','position','mm_rights','diplomacy_rights')

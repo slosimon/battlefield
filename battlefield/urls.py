@@ -21,6 +21,8 @@ from django.conf.urls.static import static
 from world import init_views as world_views
 from world import views as main_views 
 from world import message_views as message_views
+from world import ally_views as ally_views
+from world import ajax as ajax
 from django.contrib.auth import views as auth_views 
 from world import update
 from threading import Thread
@@ -59,6 +61,7 @@ urlpatterns = [
 	url(r'^messages/write/(?P<mes>[0-9]+)/$', message_views.reply, name ='write'),
 	url(r'^messages/sent/$', message_views.sent, name ='sent'),
 	url(r'^messages/(?P<mes>[0-9]+)/$', message_views.view_message, name ='view'),
+	url(r'^create/$', ally_views.create, name = 'create'),
 	url(r'^admin/', admin.site.urls),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
