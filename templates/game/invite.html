@@ -1,0 +1,35 @@
+{% extends 'base_game.html' %}
+{% load static %}
+{% load negative %}
+{% block content %}
+
+     <section id="coming-soon">        
+         <div class="container">
+            <div class="row">
+                <div class="col-sm-8 col-sm-offset-1">                    
+                    <div class="text-center coming-content">
+                        <center>
+                        <h1>Invite new player</h1>
+                          <form method="post">
+							{% csrf_token %}
+							{% for field in form %}
+							  <p>
+								{{ field.label_tag }}<br>
+								{{ field }}
+								
+								{% for error in field.errors %}
+								  <p style="color: red">{{ error }}</p>
+								{% endfor %}
+							  </p>
+							{% endfor %}
+							<div class="wrapper_btn" style="">
+								<button type="submit" class="btn btn-common" style="margin: 0 auto;">Send invitation</button>
+							</div>
+						  </form>
+						  </center>
+                    </div>                    
+                </div>
+            </div>
+        </div>       
+    </section>
+ {% endblock %}

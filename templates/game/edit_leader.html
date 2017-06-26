@@ -9,7 +9,7 @@
 				<div class="col-sm-8 col-sm-offset-1">                    
 					<div class="text-center coming-content">
 						<center>
-						<h1>Found new alliance</h1>
+						<h1>Edit {{player.user.username}}</h1>
 							<form method="post">
 								{% csrf_token %}
 								{% for field in form %}
@@ -23,7 +23,7 @@
 									</p>
 								{% endfor %}
 								<div class="wrapper_btn" style="">
-									<button type="submit" class="btn btn-common" style="margin: 0 auto;">Send</button>
+									<button type="submit" class="btn btn-common" style="margin: 0 auto;">Assign</button>
 								</div>
 							</form>
 						</center>

@@ -1,0 +1,28 @@
+{% extends 'base_game.html' %}
+{% load static %}
+{% load negative %}
+{% block content %}
+
+	<section id="coming-soon">        
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-8 col-sm-offset-1">                    
+					<div class="text-center coming-content">
+						<center>
+							<h1>Leaders</h1>
+							{% for leader in leaders %}
+								<p><strong>{{leader.position}}</strong>{{leader.leader.user.username}}</p>
+								<form method="get" action="/ally/edit-leaders/{{leader.id}}/">
+									{% csrf_token %}
+									<div class="wrapper_btn" style="">
+										<button type="submit" class="btn btn-common" style="margin: 0 auto;">Edit</button>
+									</div>
+								</form>
+							{% endfor %}
+						</center>
+					</div>                    
+				</div>
+			</div>
+		</div>       
+	</section>
+{% endblock %}

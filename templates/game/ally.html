@@ -1,0 +1,98 @@
+{% extends 'base_game.html' %}
+{% load static %}
+{% load negative %}
+{% block content %}
+
+<section id="coming-soon">        
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-8 col-sm-offset-1">                    
+				<div class="text-center coming-content">
+					<center>
+						<h1>{{ally.name}} ({{ally.short_name}})</h1>
+
+						<div class="col-md-6">
+							<ul id="tab1" class="nav nav-tabs">
+								<li class="active"><a href="#tab1-item1" data-toggle="tab">Profile</a></li>
+								<li><a href="#tab1-item2" data-toggle="tab">Players</a></li>
+								<li><a href="#tab1-item3" data-toggle="tab">Options</a></li>
+							</ul>
+							<div class="tab-content">
+								<div class="tab-pane fade active in" id="tab1-item1">
+									<table>
+										<col width="150">
+										<col width="150">
+										<tr>
+											<th>Name:</th>
+											<td>{{ally.name}}</td>
+										</tr>
+										<tr>
+											<th>Short name:</th>
+											<td>{{ally.short_name}}</td>
+										</tr>
+										<tr>
+											<th>Players:</th>
+											<td>{{count}}</td>
+										</tr>
+										{% for leader in leadership %}
+											<tr>
+												<th>{{leader.position}}</th>
+												<td>{{leader.leader.user.username}}</td>
+											</tr>
+										{% endfor %}
+									</table>
+									<p>{{ally.profile}}</p>
+								</div>
+								<div class="tab-pane fade" id="tab1-item2">
+									<table>
+										<tr>
+											<col width="150">
+											<col width="150">
+											<col width="50">
+											<th>Player</th>
+											<th>Tribe</th>
+											<th>Population</th>
+										</tr>
+										{% for player in members %}
+											<tr>
+												<td><a href="/profile/{{player.id}}/">{{player.user.username}}</a></td>
+												<td>{{player.tribe}}</td>
+												<td>{{player.population}}</td>
+											</tr>
+										{% endfor %}
+									</table>
+								</div>
+								<div class="tab-pane fade" id="tab1-item3">
+									<table>
+										<!-- TODO filter option -->
+										<tr>
+											<th><a href="/ally/edit-profile/">Edit alliance profile</a></th>
+											
+										</tr>
+										<tr>
+											<th><a href="/ally/leader/">Assign new leader</a></th> 
+											
+										</tr>
+										<tr>
+											<th><a href="/ally/edit-leaders/">Edit leaders</a></th>
+										</tr>
+										<tr>
+											<th><a href="/ally/invite/">Invite new member</a></th> 
+										</tr>
+										<tr>
+											<th><a href="/ally/diplomacy/">Diplomacy</a></th>
+										</tr>
+										<tr>
+											<th><a href="/ally/leave/">Leave alliance</a></th>
+										</tr>
+									</table>
+								</div>
+							</div>
+						</div>
+					</center>
+				</div>                    
+			</div>
+		</div>
+	</div>       
+</section>
+{% endblock %}

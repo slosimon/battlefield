@@ -39,7 +39,7 @@ class Troops(models.Model):
 	training_cost = models.ForeignKey(Resources, related_name = "training_cost")
 	training_time = models.TimeField()
 	image = models.ImageField()
-	upgrade_cost = models.ManyToManyField(UpgradeResources, null = True, related_name = "Upgrade")
+	upgrade_cost = models.ManyToManyField(UpgradeResources, related_name = "Upgrade")
 	description = models.TextField(max_length = 2550)
 	name = models.CharField(max_length = 25)
 	consumption = models.IntegerField()

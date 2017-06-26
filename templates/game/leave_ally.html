@@ -9,7 +9,8 @@
 				<div class="col-sm-8 col-sm-offset-1">                    
 					<div class="text-center coming-content">
 						<center>
-						<h1>Found new alliance</h1>
+							<h1>Leave alliance</h1>
+							<p>Do you really want to leave <strong>{{ally.name}}</strong>?</p>
 							<form method="post">
 								{% csrf_token %}
 								{% for field in form %}
@@ -22,8 +23,9 @@
 										{% endfor %}
 									</p>
 								{% endfor %}
+								{% csrf_token %}
 								<div class="wrapper_btn" style="">
-									<button type="submit" class="btn btn-common" style="margin: 0 auto;">Send</button>
+									<button type="submit" class="btn btn-common" style="margin: 0 auto;">Leave</button>
 								</div>
 							</form>
 						</center>

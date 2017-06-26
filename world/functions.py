@@ -4,6 +4,8 @@ from models import *
 from building.models import Building as Bbuilding
 from building.models import Field as Bfield
 from django.conf import settings
+from django.utils.timezone import utc
+from datetime import datetime
 
 def village_start(player, village):
 	buildings = Bbuilding.objects.get(name = 'Headquarters')
@@ -51,51 +53,51 @@ def village_start(player, village):
 	troops.save()
 	army.t0 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t1 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t2 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t3 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t4 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t5 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t6 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t7 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t8 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t9 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t10 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t11 = Troops.objects.get(id = troops.id)
 	troops = Troops()
-	troops.count = 0
+	troops.count = -1
 	troops.save()
 	army.t12 = Troops.objects.get(id = troops.id)
 	troops = Troops()
@@ -115,19 +117,19 @@ def village_start(player, village):
 	real.save()
 	village.real_production = real
 	village.free_crop = real.food - 2
-	if player.bonuses.oil_bonus_production:
+	if player.bonuses.oil_bonus_production > datetime.utcnow().replace(tzinfo=utc):
 		oil = 25
 	else:
 		oil = 0
-	if player.bonuses.iron_bonus_production:
+	if player.bonuses.iron_bonus_production > datetime.utcnow().replace(tzinfo=utc):
 		iron = 25
 	else:
 		iron = 0
-	if player.bonuses.wood_bonus_production:
+	if player.bonuses.wood_bonus_production > datetime.utcnow().replace(tzinfo=utc):
 		wood = 25
 	else:
 		wood = 0
-	if player.bonuses.food_bonus_production:
+	if player.bonuses.food_bonus_production > datetime.utcnow().replace(tzinfo=utc):
 		food = 25
 	else:
 		food = 0

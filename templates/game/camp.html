@@ -1,7 +1,7 @@
-{% extends 'base_game.html' %}
+{% extends 'game/building.html' %}
 {% load static %}
 {% load negative %}
-{% block content %}
+{% block bonus %}
 
 	<section id="coming-soon">        
 		<div class="container">
@@ -9,21 +9,21 @@
 				<div class="col-sm-8 col-sm-offset-1">                    
 					<div class="text-center coming-content">
 						<center>
-						<h1>Found new alliance</h1>
+						<h1>Train</h1>
 							<form method="post">
 								{% csrf_token %}
 								{% for field in form %}
 									<p>
-										{{ field.label_tag }}<br>
-										{{ field }}
-
+										{{ field.label_tag}}<br>
+										{{ field }} <br>
+										{{ field.help_text |safe }}
 										{% for error in field.errors %}
 											<p style="color: red">{{ error }}</p>
 										{% endfor %}
 									</p>
 								{% endfor %}
 								<div class="wrapper_btn" style="">
-									<button type="submit" class="btn btn-common" style="margin: 0 auto;">Send</button>
+									<button type="submit" class="btn btn-common" style="margin: 0 auto;">Start training</button>
 								</div>
 							</form>
 						</center>
@@ -32,4 +32,5 @@
 			</div>
 		</div>       
 	</section>
+	
 {% endblock %}

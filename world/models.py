@@ -257,12 +257,20 @@ class Hangar(models.Model):
 	
 class Port(models.Model):
 	queue = models.ManyToManyField(Queue)
+
+class Artilery(models.Model):
+	queue = models.ManyToManyField(Queue)
+	
+class Parli(models.Model):
+	queue = models.ManyToManyField(Queue)
 	
 class TrainingQueue(models.Model):
 	barracks = models.ForeignKey(Barracks, null = True, default = None)
 	workshop = models.ForeignKey(Workshop, null = True, default = None)
 	hangar = models.ForeignKey(Hangar, null = True, default = None)
 	port = models.ForeignKey(Port, null = True, default = None)
+	artilery = models.ForeignKey(Artilery, null = True, default = None)
+	parli = models.ForeignKey(Parli, null = True, default = None)
 	barracks_large = models.ForeignKey(Barracks,related_name = 'Large', null = True, default = None)
 	hangar_large = models.ForeignKey(Hangar, related_name = 'Large', null = True, default = None)
 	next_update = models.TimeField(default = None, null = True)
@@ -283,7 +291,7 @@ class Village(models.Model):
 	storage_capacity = models.IntegerField(default = 800)
 	food_capacity = models.IntegerField(default = 800)
 	production = models.ForeignKey(Resources, related_name = "Production", null = True)
-	reinforcements = models.ManyToManyField(Army, related_name="reinforcements", null = True)
+	reinforcements = models.ManyToManyField(Army, related_name="reinforcements")
 	field_1 = models.ForeignKey(FieldQueue,default = None, null = True)
 	field_2 = models.ForeignKey(FieldQueue, default = None, null = True, related_name = 'Secondary')
 	building_1 = models.ForeignKey(BuildingQueue, default = None, null = True)
@@ -385,16 +393,16 @@ class Player(models.Model):
 	tribe = models.ForeignKey(Tribe)
 	gold = models.IntegerField(verbose_name = _('Gold'), default = 30)
 	bonuses = models.ForeignKey(Bonus)
-	reports = models.ManyToManyField(Report, null = True)
-	scouting_reports = models.ManyToManyField(Scouting, null = True)
-	market_reports = models.ManyToManyField(Trading, null = True)
+	reports = models.ManyToManyField(Report)
+	scouting_reports = models.ManyToManyField(Scouting)
+	market_reports = models.ManyToManyField(Trading)
 	sitter_1 = models.ForeignKey(User, related_name="first_sitter", default = None, null = True)
 	sitter_2 = models.ForeignKey(User, related_name="second_sitter", default = None, null = True)
 	last_login = models.DateTimeField(default = datetime.now())
 	artifact_holder = models.BooleanField(default = False)
 	culture_points = models.FloatField(default = 0)
 	last_update = models.DateTimeField(null = True, default = None)
-	medals = models.ManyToManyField(Medals, null = True)
+	medals = models.ManyToManyField(Medals)
 	old_rank = models.IntegerField()
 	raided = models.IntegerField(default = 0)
 	attack_points = models.IntegerField(default = 0)
@@ -448,6 +456,10 @@ class Ally_leadership(models.Model):
 	position = models.CharField(max_length = 50, blank = True)
 	mm_rights = models.BooleanField()
 	diplomacy = models.BooleanField()
+	invite = models.BooleanField(default = True)
+	set_leader = models.BooleanField(default = True)
+	profile = models.BooleanField(default = True)
+	kick = models.BooleanField(default = True)
 	
 class Alliance(models.Model):
 	member = models.ManyToManyField(Player)
@@ -456,7 +468,7 @@ class Alliance(models.Model):
 	old_population = models.IntegerField()
 	name = models.CharField(default = "ABC", unique = True, max_length = 26)
 	short_name = models.CharField(default="ABC", max_length = 6)
-	description = models.TextField(default = None, null = True)
+	profile = models.TextField(default = None, null = True)
 	
 class Invitation(models.Model):
 	ally = models.ForeignKey(Alliance)

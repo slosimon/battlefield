@@ -28,6 +28,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.timezone import utc
 import get_buildings
 from slugify import slugify
+from django.http import Http404 
 
 def count_messages(request):
 	player = Player.objects.get(user = request.user)
@@ -46,7 +47,7 @@ def create(request):
 			ally.save()
 			player.in_ally = True
 			player.save()
-			return redirect ('/fields/')
+			return redirect ('/ally/')
 	else:
 		form = AllyForm()
 	return render(request, 'game/new_ally.html', {'player':player, 'unread_messages':count_messages(request), 'form':form})
@@ -55,8 +56,203 @@ def create(request):
 def ally(request):
 	player = Player.objects.get(user = request.user)
 	if player.in_ally:
-		ally = Aliiance.objects.filter(member__in = player)
-		return render(request, 'game/ally.html', {'player':player, 'ally':ally})
+		ally = player.alliance_set.all()
+		ally = ally[0]
+		members = ally.member.order_by('-population')
+		count = len(members)
+		leaders = ally.leadership.all()
+		return render(request, 'game/ally.html', {'player':player, 'ally':ally, 'members':members, 'count':count, 'leadership':leaders})
 	else:
 		return redirect('/fields/')
-	
+
+@login_required		
+def invitations(request):
+	player = Player.objects.get(user = request.user)
+	invitations = Invitation.objects.filter(invited = player)
+	return render(request, 'game/invitations.html', {'invitationset':invitations, 'player':player})
+
+@login_required	
+def invitation_action(request, inv, action):
+	player = Player.objects.get(user = request.user)
+	invitations = Invitation.objects.get(id = inv)
+	if invitations.invited == player:
+		if action == "accept":
+			player.in_ally = True
+			invitations.ally.member.add(player)
+			invitations.ally.save()
+			player.save()
+			invitations.delete()
+		elif action== "reject":
+			invitations.delete()
+		else:
+			return redirect('/fields/')
+	return redirect('/ally/')
+
+@login_required	
+def invite(request):
+	player = Player.objects.get(user = request.user)
+	form = InviteForm(request.POST)
+	ally = player.alliance_set.all()
+	ally = ally[0]
+	validator = False
+	leaders = ally.leadership.all()
+	for leader in leaders:
+		print(leader.leader.id, player.id)
+		if leader.leader == player and leader.invite:
+			validator = True
+	print(validator)
+	if validator:
+		if request.method == 'POST':
+			if form.is_valid():
+				username = form.cleaned_data.get('player')
+				user = User.objects.get(username = username)
+				invited = Player.objects.get(user= user)
+				bar = Invitation.objects.create(ally = ally, invited = invited)
+				return redirect ('/ally/')
+		else:
+			form = InviteForm()
+		return render(request, 'game/invite.html', {'player':player, 'form':form})
+	raise Http404
+
+@login_required	
+def profile(request):
+	player = Player.objects.get(user = request.user)
+	form = ProfileForm(request.POST)
+	ally = player.alliance_set.all()
+	ally = ally[0]
+	validator = False
+	leaders = ally.leadership.all()
+	for leader in leaders:
+		print(leader.leader.id, player.id)
+		if leader.leader == player and leader.profile:
+			validator = True
+	print(validator)
+	if validator:
+		if request.method == 'POST':
+			if form.is_valid():
+				profile = form.cleaned_data.get('profile')
+				ally.profile = profile
+				ally.save()
+				return redirect ('/ally/')
+		else:
+			form = ProfileForm()
+		return render(request, 'game/profile.html', {'player':player, 'form':form})
+	raise Http404
+
+@login_required	
+def new_leader(request):
+	player = Player.objects.get(user = request.user)
+	form = LeaderForm(request.POST)
+	ally = player.alliance_set.all()
+	ally = ally[0]
+	validator = False
+	leaders = ally.leadership.all()
+	for leader in leaders:
+		print(leader.leader.id, player.id)
+		if leader.leader == player and leader.set_leader:
+			validator = True
+	print(validator)
+	if validator:
+		if request.method == 'POST':
+			if form.is_valid():
+				leader = form.cleaned_data.get('leader')
+				position = form.cleaned_data.get('position')
+				diplomacy = form.cleaned_data.get('diplomacy_rights')
+				invite = form.cleaned_data.get('invite')
+				set_leader = form.cleaned_data.get('set_leader')
+				mm_rights = form.cleaned_data.get('mm_rights')
+				profile = form.cleaned_data.get('profile')
+				kick = form.cleaned_data.get('kick')
+				user = User.objects.get(username = leader)
+				leader = Player.objects.get(user= user)
+				new = Ally_leadership.objects.create(leader = leader, position = position, diplomacy = diplomacy, invite = invite, set_leader = set_leader, profile = profile, kick = kick, mm_rights = mm_rights)
+				ally.leadership.add(new)
+				ally.save()
+				return redirect ('/ally/')
+		else:
+			form = LeaderForm()
+		return render(request, 'game/new_leader.html', {'player':player, 'form':form})
+	raise Http404
+
+@login_required	
+def edit_leader(request, lea):
+	player = Player.objects.get(user = request.user)
+	form = LeaderEditForm(request.POST)
+	ally = player.alliance_set.all()
+	ally = ally[0]
+	validator = False
+	leaders = ally.leadership.all()
+	for leader in leaders:
+		print(leader.leader.id, player.id)
+		if leader.leader == player and leader.set_leader:
+			validator = True
+	print(validator)
+	if validator:
+		new = Ally_leadership.objects.get(id = lea)
+		if request.method == 'POST':
+			if form.is_valid():
+				position = form.cleaned_data.get('position')
+				diplomacy = form.cleaned_data.get('diplomacy_rights')
+				invite = form.cleaned_data.get('invite')
+				set_leader = form.cleaned_data.get('set_leader')
+				mm_rights = form.cleaned_data.get('mm_rights')
+				profile = form.cleaned_data.get('profile')
+				kick = form.cleaned_data.get('kick')
+				user = User.objects.get(username = new.leader.user.username)
+				leader = Player.objects.get(user= user)
+				
+				new.position = position
+				new.diplomacy = diplomacy
+				new.invite = invite
+				new.set_leader = set_leader
+				new.profile = profile
+				new.kick = kick
+				new.mm_rights = mm_rights
+				new.save()
+				ally.save()
+				return redirect ('/ally/')
+		else:
+			from django.forms import widgets
+			form = LeaderEditForm(initial={'leader': new.leader, 'position':new.position, 'diplomacy_rights':new.diplomacy, 'invite':new.invite, 'set_leader': new.set_leader, 'profile':new.profile, 'kick':new.kick, 'mm_rights':new.mm_rights})
+		return render(request, 'game/edit_leader.html', {'player':player, 'form':form})
+	raise Http404	
+
+@login_required	
+def edit_leaders(request):
+	player = Player.objects.get(user = request.user)
+	ally = player.alliance_set.all()
+	ally = ally[0]
+	validator = False
+	leaders = ally.leadership.all()
+	for leader in leaders:
+		print(leader.leader.id, player.id)
+		if leader.leader == player and leader.set_leader:
+			validator = True
+	print(validator)
+	if validator:
+		return render(request, 'game/edit_leaders.html', {'leaders':leaders})
+	raise Http404
+
+@login_required	
+def leave(request):
+	player = Player.objects.get(user = request.user)
+	ally = player.alliance_set.all()
+	ally = ally[0]
+	form = ConfirmationForm(request.POST)
+	if request.method == 'POST':
+		if form.is_valid():
+			print(form.cleaned_data.get('password'))
+			if player.user.check_password(form.cleaned_data.get('password')):
+				ally.member.remove(player)
+				ally.save()
+				player.in_ally = False
+				player.save()
+				return redirect ('/fields/')
+			else:
+				form = ConfirmationForm()
+				return render(request, 'game/leave_ally.html', {'ally':ally, 'form':form})
+	else:
+		form = ConfirmationForm()
+		return render(request, 'game/leave_ally.html', {'ally':ally, 'form':form})
+		
+# TODO kick, stats!

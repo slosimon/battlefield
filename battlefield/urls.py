@@ -62,6 +62,16 @@ urlpatterns = [
 	url(r'^messages/sent/$', message_views.sent, name ='sent'),
 	url(r'^messages/(?P<mes>[0-9]+)/$', message_views.view_message, name ='view'),
 	url(r'^create/$', ally_views.create, name = 'create'),
+	url(r'^ally/$', ally_views.ally, name = 'ally'),
+	url(r'^invitations/$', ally_views.invitations, name = 'invitations'),
+	url(r'^invitation/(?P<inv>[0-9]+)/(?P<action>[a-z]+)/$', ally_views.invitation_action, name = 'invitations action'),
+	url(r'^ally/invite/$', ally_views.invite, name = 'name'),
+	url(r'^ally/edit-profile/$', ally_views.profile, name = 'profile'),
+	url(r'^ally/edit-leaders/$', ally_views.edit_leaders),
+	url(r'^ally/edit-leaders/(?P<lea>[0-9]+)/$', ally_views.edit_leader),
+	url(r'^ally/leader/$', ally_views.new_leader),
+	url(r'^ally/leader/$', ally_views.new_leader),
+	url(r'^ally/leave/$', ally_views.leave),
 	url(r'^admin/', admin.site.urls),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -6,20 +6,49 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-sm-12 text-center">
-				<img src="{{picture}}" class="margin-bottom" alt="">
-				<h1 class="margin-bottom">{{field.name.name}}</h1>
-				<p>{{description}}</p>
-				<p><i>Old bonus: {{current_production}}</i></p>
-				<p><b>New bonus: {{upgraded_production}}</b></p>
-				<h3>Oil: {{cost_oil}} Iron: {{cost_iron}} Wood: {{cost_wood}} Food: {{cost_food}}</h3>
-				<h2>Upgrade time: {{upgrade_time}}</h2>
-				{% if ok == "1" %}
-				<form method="POST" action="upgrade/">
-					{% csrf_token %}
-					<input type="submit" class="btn btn-lg btn-success" value="Upgrade" name="{{pos}}">
-				</form>
+				{% if multi %}
+					<ul id="tab1" class="nav nav-tabs">
+						<li class="active"><a href="#tab1-item1" data-toggle="tab">Building</a></li>
+						<li><a href="#tab1-item2" data-toggle="tab">Options</a></li>
+					</ul>
+					<div class="tab-content">
+						<div class="tab-pane fade active in" id="tab1-item1">
+							<img src="{{picture}}" class="margin-bottom" alt="">
+							<h1 class="margin-bottom">{{field.name.name}}</h1>
+							<p>{{description}}</p>
+							<p><i>Old bonus: {{current_production}}</i></p>
+							<p><b>New bonus: {{upgraded_production}}</b></p>
+							<h3>Oil: {{cost_oil}} Iron: {{cost_iron}} Wood: {{cost_wood}} Food: {{cost_food}}</h3>
+							<h2>Upgrade time: {{upgrade_time}}</h2>
+							{% if ok == "1" %}
+							<form method="POST" action="upgrade/">
+								{% csrf_token %}
+								<input type="submit" class="btn btn-lg btn-success" value="Upgrade" name="{{pos}}">
+							</form>
+							{% else %}
+								<input type="submit" class="btn btn-lg btn-danger" value="Upgrade" name="{{pos}}">
+							{% endif %}
+						</div>
+						<div class="tab-pane fade" id="tab1-item2">
+							{% block bonus %}{% endblock %}
+						</div>
+					</div>
 				{% else %}
-					<input type="submit" class="btn btn-lg btn-danger" value="Upgrade" name="{{pos}}">
+					<img src="{{picture}}" class="margin-bottom" alt="">
+					<h1 class="margin-bottom">{{field.name.name}}</h1>
+					<p>{{description}}</p>
+					<p><i>Old bonus: {{current_production}}</i></p>
+					<p><b>New bonus: {{upgraded_production}}</b></p>
+					<h3>Oil: {{cost_oil}} Iron: {{cost_iron}} Wood: {{cost_wood}} Food: {{cost_food}}</h3>
+					<h2>Upgrade time: {{upgrade_time}}</h2>
+					{% if ok == "1" %}
+					<form method="POST" action="upgrade/">
+						{% csrf_token %}
+						<input type="submit" class="btn btn-lg btn-success" value="Upgrade" name="{{pos}}">
+					</form>
+					{% else %}
+						<input type="submit" class="btn btn-lg btn-danger" value="Upgrade" name="{{pos}}">
+					{% endif %}
 				{% endif %}
 			</div>
 		</div>

@@ -43,5 +43,8 @@ def invitations(request):
 	response_data['gold'] = player.gold
 	print(len(Message.objects.filter(read = False, recipent = player)))
 	response_data['messages_count'] = count_messages(request)
+	response_data['player'] = player
 	print(response_data)
 	return (response_data)
+	
+	
