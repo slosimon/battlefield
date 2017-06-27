@@ -10,7 +10,7 @@ from django.dispatch import receiver
 import building
 import troops
 from django.conf import settings
-
+from django.utils.timezone import utc
 # Create your models here.
 
 class Tribe(models.Model):
@@ -275,6 +275,10 @@ class TrainingQueue(models.Model):
 	hangar_large = models.ForeignKey(Hangar, related_name = 'Large', null = True, default = None)
 	next_update = models.TimeField(default = None, null = True)
 	
+class Party(models.Model):
+	large = models.BooleanField(default = False)
+	end = models.DateTimeField(default = datetime.utcnow().replace(tzinfo=utc))
+	
 class Village(models.Model):
 	typ = models.ForeignKey(VillageType)
 	name = models.CharField(max_length = 26, null = True)
@@ -301,6 +305,7 @@ class Village(models.Model):
 	bonus = models.ForeignKey(Resources, related_name = 'bonus', null = True, default = None)
 	free_crop = models.IntegerField()
 	training_queue = models.ForeignKey(TrainingQueue, null = True, default = None)
+	party = models.ForeignKey(Party, default = None, null = True)
 
 class Update_negative(models.Model):
 	empty_time = models.DateTimeField()

@@ -27,6 +27,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.timezone import utc
 import get_buildings
+from math import floor
 from slugify import slugify
 
 def count_messages(request):
@@ -266,7 +267,7 @@ def field(request, pos):
 	upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
 	description = field.name.description
 	ok = "0" # TODO
-	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= needed + 1 and (nex.lvl <= 10 or player.last_village.capital):
+	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= needed + 1 and (nex.level <= 10 or player.last_village.capital):
 		if player.last_village.field_1 is None:
 			ok = "1"
 		elif player.last_village.field_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
@@ -300,7 +301,7 @@ def upgrade_field(request, pos):
 	seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
 	seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
 	upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
-	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= needed + 1 and (nex.lvl <= 10 or player.last_village.capital): 
+	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= needed + 1 and (nex.level <= 10 or player.last_village.capital): 
 		if player.last_village.field_1 is None:
 			resources.oil -= cost_oil
 			resources.iron -= cost_iron
@@ -378,7 +379,7 @@ def get_building(request, pos):
 		except Exception:
 			picture = ('/media/init/img/buildings/none.png')
 			
-		# TODO view based on building (camp (L), hangar (L), market, parliament, residence, bunker, hero's birth house, townhall, university (SUM = 9) )
+		# TODO view based on building (market, bunker, hero's birth house, townhall, university (SUM = 5) )
 		if buildinga.building.name == 'Training camp':
 			form = CampForm(request.POST, player_id = player.id, lvl = buildinga.lvl)
 			if request.method == 'POST':
@@ -407,7 +408,7 @@ def get_building(request, pos):
 									nex = army.t0.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t0')), maximum)
-									new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t0.troop.training_cost
 									take.oil -= cost.oil * train
@@ -419,7 +420,7 @@ def get_building(request, pos):
 									nex = army.t1.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t1')), maximum)
-									new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t1.troop.training_cost
 									take.oil -= cost.oil * train
@@ -432,7 +433,7 @@ def get_building(request, pos):
 									nex = army.t0.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t0')), maximum)
-									new = Queue(troop = army.t0, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t0, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(int( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t0.troop.training_cost
 									take.oil -= cost.oil * train
@@ -444,7 +445,7 @@ def get_building(request, pos):
 									nex = army.t1.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t1')), maximum)
-									new = Queue(troop = army.t1, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t1, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t1.troop.training_cost
 									take.oil -= cost.oil * train
@@ -460,7 +461,7 @@ def get_building(request, pos):
 								nex = army.t0.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t0')), maximum)
-								new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t0.troop.training_cost
 								take.oil -= cost.oil * train
@@ -472,7 +473,7 @@ def get_building(request, pos):
 								nex = army.t1.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t1')), maximum)
-								new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t1.troop.training_cost
 								take.oil -= cost.oil * train
@@ -490,7 +491,7 @@ def get_building(request, pos):
 							nex = army.t0.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t0')), maximum)
-							new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t0.troop.training_cost
 							take.oil -= cost.oil * train
@@ -502,7 +503,7 @@ def get_building(request, pos):
 							nex = army.t1.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t1')), maximum)
-							new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t1.troop.training_cost
 							take.oil -= cost.oil * train
@@ -515,7 +516,7 @@ def get_building(request, pos):
 						bar.save()
 						bar.queue.add(new)
 						bar.save()
-						tq = TrainingQueue(barracks = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100))		
+						tq = TrainingQueue(barracks = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )))		
 					return redirect ('/center/')
 			else:
 				form = CampForm(player_id = player.id, lvl = buildinga.lvl)
@@ -545,7 +546,7 @@ def get_building(request, pos):
 									nex = army.t2.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t2')), maximum)
-									new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t2.troop.training_cost
 									take.oil -= cost.oil * train
@@ -557,7 +558,7 @@ def get_building(request, pos):
 									nex = army.t3.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t3')), maximum)
-									new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t3.troop.training_cost
 									take.oil -= cost.oil * train
@@ -569,7 +570,7 @@ def get_building(request, pos):
 									nex = army.t4.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t4')), maximum)
-									new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t4.troop.training_cost
 									take.oil -= cost.oil * train
@@ -582,7 +583,7 @@ def get_building(request, pos):
 									nex = army.t2.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t2')), maximum)
-									new = Queue(troop = army.t2, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t2, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(int( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t2.troop.training_cost
 									take.oil -= cost.oil * train
@@ -594,7 +595,7 @@ def get_building(request, pos):
 									nex = army.t3.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t3')), maximum)
-									new = Queue(troop = army.t3, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t3, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t3.troop.training_cost
 									take.oil -= cost.oil * train
@@ -606,7 +607,7 @@ def get_building(request, pos):
 									nex = army.t4.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t4')), maximum)
-									new = Queue(troop = army.t4, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t4, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t4.troop.training_cost
 									take.oil -= cost.oil * train
@@ -622,7 +623,7 @@ def get_building(request, pos):
 								nex = army.t2.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t2')), maximum)
-								new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t2.troop.training_cost
 								take.oil -= cost.oil * train
@@ -634,7 +635,7 @@ def get_building(request, pos):
 								nex = army.t3.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t3')), maximum)
-								new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t3.troop.training_cost
 								take.oil -= cost.oil * train
@@ -646,7 +647,7 @@ def get_building(request, pos):
 								nex = army.t4.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t4')), maximum)
-								new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t4.troop.training_cost
 								take.oil -= cost.oil * train
@@ -664,7 +665,7 @@ def get_building(request, pos):
 							nex = army.t2.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t2')), maximum)
-							new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t2.troop.training_cost
 							take.oil -= cost.oil * train
@@ -676,7 +677,7 @@ def get_building(request, pos):
 							nex = army.t3.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t3')), maximum)
-							new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t3.troop.training_cost
 							take.oil -= cost.oil * train
@@ -688,7 +689,7 @@ def get_building(request, pos):
 							nex = army.t4.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t4')), maximum)
-							new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t4.troop.training_cost
 							take.oil -= cost.oil * train
@@ -701,7 +702,7 @@ def get_building(request, pos):
 						bar.save()
 						bar.queue.add(new)
 						bar.save()
-						tq = TrainingQueue(hangar = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100))		
+						tq = TrainingQueue(hangar = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )))		
 					return redirect ('/center/')
 			else:
 				form = HangarForm(player_id = player.id, lvl = buildinga.lvl)
@@ -735,7 +736,7 @@ def get_building(request, pos):
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									maximum /= 3
 									train = min(int(form.cleaned_data.get('t0')), maximum)
-									new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t0.troop.training_cost
 									take.oil -= cost.oil * train * 3
@@ -748,7 +749,7 @@ def get_building(request, pos):
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									maximum /= 3
 									train = min(int(form.cleaned_data.get('t1')), maximum)
-									new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t1.troop.training_cost
 									take.oil -= cost.oil * train * 3
@@ -762,7 +763,7 @@ def get_building(request, pos):
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									maximum /= 3
 									train = min(int(form.cleaned_data.get('t0')), maximum)
-									new = Queue(troop = army.t0, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t0, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(int( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t0.troop.training_cost
 									take.oil -= cost.oil * train * 3
@@ -775,7 +776,7 @@ def get_building(request, pos):
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									maximum /= 3
 									train = min(int(form.cleaned_data.get('t1')), maximum)
-									new = Queue(troop = army.t1, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t1, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t1.troop.training_cost
 									take.oil -= cost.oil * train * 3
@@ -792,7 +793,7 @@ def get_building(request, pos):
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								maximum /= 3
 								train = min(int(form.cleaned_data.get('t0')), maximum)
-								new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t0.troop.training_cost
 								take.oil -= cost.oil * train * 3
@@ -805,7 +806,7 @@ def get_building(request, pos):
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								maximum /= 3
 								train = min(int(form.cleaned_data.get('t1')), maximum)
-								new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t1.troop.training_cost
 								take.oil -= cost.oil * train * 3
@@ -824,7 +825,7 @@ def get_building(request, pos):
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							maximum /= 3
 							train = min(int(form.cleaned_data.get('t0')), maximum)
-							new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t0.troop.training_cost
 							take.oil -= cost.oil * train * 3
@@ -837,7 +838,7 @@ def get_building(request, pos):
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							maximum /= 3
 							train = min(int(form.cleaned_data.get('t1')), maximum)
-							new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t1.troop.training_cost
 							take.oil -= cost.oil * train * 3
@@ -850,7 +851,7 @@ def get_building(request, pos):
 						bar.save()
 						bar.queue.add(new)
 						bar.save()
-						tq = TrainingQueue(barracks = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100))		
+						tq = TrainingQueue(barracks = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )))		
 					return redirect ('/center/')
 			else:
 				form = CampForm(player_id = player.id, lvl = buildinga.lvl)
@@ -885,7 +886,7 @@ def get_building(request, pos):
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									maximum /= 3
 									train = min(int(form.cleaned_data.get('t2')), maximum)
-									new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t2.troop.training_cost
 									take.oil -= cost.oil * train * 3
@@ -898,7 +899,7 @@ def get_building(request, pos):
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									maximum /= 3
 									train = min(int(form.cleaned_data.get('t3')), maximum)
-									new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t3.troop.training_cost
 									take.oil -= cost.oil * train * 3
@@ -911,7 +912,7 @@ def get_building(request, pos):
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									maximum /= 3
 									train = min(int(form.cleaned_data.get('t4')), maximum)
-									new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t4.troop.training_cost
 									take.oil -= cost.oil * train * 3
@@ -925,7 +926,7 @@ def get_building(request, pos):
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									maximum /= 3
 									train = min(int(form.cleaned_data.get('t2')), maximum)
-									new = Queue(troop = army.t2, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t2, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(int( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t2.troop.training_cost
 									take.oil -= cost.oil * train * 3
@@ -938,7 +939,7 @@ def get_building(request, pos):
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									maximum /= 3
 									train = min(int(form.cleaned_data.get('t3')), maximum)
-									new = Queue(troop = army.t3, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t3, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t3.troop.training_cost
 									take.oil -= cost.oil * train * 3
@@ -951,7 +952,7 @@ def get_building(request, pos):
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									maximum /= 3
 									train = min(int(form.cleaned_data.get('t4')), maximum)
-									new = Queue(troop = army.t4, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t4, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t4.troop.training_cost
 									take.oil -= cost.oil * train * 3
@@ -968,7 +969,7 @@ def get_building(request, pos):
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								maximum /= 3
 								train = min(int(form.cleaned_data.get('t2')), maximum)
-								new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t2.troop.training_cost
 								take.oil -= cost.oil * train * 3
@@ -981,7 +982,7 @@ def get_building(request, pos):
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								maximum /= 3
 								train = min(int(form.cleaned_data.get('t3')), maximum)
-								new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t3.troop.training_cost
 								take.oil -= cost.oil * train * 3
@@ -994,7 +995,7 @@ def get_building(request, pos):
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								maximum /= 3
 								train = min(int(form.cleaned_data.get('t4')), maximum)
-								new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t4.troop.training_cost
 								take.oil -= cost.oil * train * 3
@@ -1013,7 +1014,7 @@ def get_building(request, pos):
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							maximum /= 3
 							train = min(int(form.cleaned_data.get('t2')), maximum)
-							new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t2, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t2.troop.training_cost
 							take.oil -= cost.oil * train * 3
@@ -1026,7 +1027,7 @@ def get_building(request, pos):
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							maximum /= 3
 							train = min(int(form.cleaned_data.get('t3')), maximum)
-							new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t3, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t3.troop.training_cost
 							take.oil -= cost.oil * train * 3
@@ -1039,7 +1040,7 @@ def get_building(request, pos):
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							maximum /= 3
 							train = min(int(form.cleaned_data.get('t4')), maximum)
-							new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t4, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t4.troop.training_cost 
 							take.oil -= cost.oil * train * 3
@@ -1052,7 +1053,7 @@ def get_building(request, pos):
 						bar.save()
 						bar.queue.add(new)
 						bar.save()
-						tq = TrainingQueue(hangar = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100))		
+						tq = TrainingQueue(hangar = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )))		
 					return redirect ('/center/')
 			else:
 				form = HangarForm(player_id = player.id, lvl = buildinga.lvl)
@@ -1086,7 +1087,7 @@ def get_building(request, pos):
 									nex = army.t5.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t5')), maximum)
-									new = Queue(troop = army.t5, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t5, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t5.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1098,7 +1099,7 @@ def get_building(request, pos):
 									nex = army.t6.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t6')), maximum)
-									new = Queue(troop = army.t6, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t6, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t6.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1110,7 +1111,7 @@ def get_building(request, pos):
 									nex = army.t7.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t7')), maximum)
-									new = Queue(troop = army.t7, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t7, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t7.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1123,7 +1124,7 @@ def get_building(request, pos):
 									nex = army.t5.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t5')), maximum)
-									new = Queue(troop = army.t5, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t5, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(int( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t5.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1135,7 +1136,7 @@ def get_building(request, pos):
 									nex = army.t6.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t6')), maximum)
-									new = Queue(troop = army.t6, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t6, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t6.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1147,7 +1148,7 @@ def get_building(request, pos):
 									nex = army.t7.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t7')), maximum)
-									new = Queue(troop = army.t7, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t7, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t7.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1163,7 +1164,7 @@ def get_building(request, pos):
 								nex = army.t5.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t5')), maximum)
-								new = Queue(troop = army.t5, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t5, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t5.troop.training_cost
 								take.oil -= cost.oil * train
@@ -1175,7 +1176,7 @@ def get_building(request, pos):
 								nex = army.t6.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t6')), maximum)
-								new = Queue(troop = army.t6, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t6, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t6.troop.training_cost
 								take.oil -= cost.oil * train
@@ -1187,7 +1188,7 @@ def get_building(request, pos):
 								nex = army.t7.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t7')), maximum)
-								new = Queue(troop = army.t7, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t7, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t7.troop.training_cost
 								take.oil -= cost.oil * train
@@ -1205,7 +1206,7 @@ def get_building(request, pos):
 							nex = army.t5.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t5')), maximum)
-							new = Queue(troop = army.t5, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t5, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t5.troop.training_cost
 							take.oil -= cost.oil * train
@@ -1217,7 +1218,7 @@ def get_building(request, pos):
 							nex = army.t6.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t6')), maximum)
-							new = Queue(troop = army.t6, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t6, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t6.troop.training_cost
 							take.oil -= cost.oil * train
@@ -1229,7 +1230,7 @@ def get_building(request, pos):
 							nex = army.t7.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t7')), maximum)
-							new = Queue(troop = army.t7, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t7, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t7.troop.training_cost
 							take.oil -= cost.oil * train
@@ -1242,7 +1243,7 @@ def get_building(request, pos):
 						bar.save()
 						bar.queue.add(new)
 						bar.save()
-						tq = TrainingQueue(port = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100))
+						tq = TrainingQueue(port = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )))
 					
 					return redirect ('/center/')
 			else:
@@ -1273,7 +1274,7 @@ def get_building(request, pos):
 									nex = army.t8.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t8')), maximum)
-									new = Queue(troop = army.t8, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t8, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t8.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1285,7 +1286,7 @@ def get_building(request, pos):
 									nex = army.t9.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t9')), maximum)
-									new = Queue(troop = army.t9, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t9, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t9.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1297,7 +1298,7 @@ def get_building(request, pos):
 									nex = army.t10.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t10')), maximum)
-									new = Queue(troop = army.t10, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t10, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t10.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1309,7 +1310,7 @@ def get_building(request, pos):
 									nex = army.t11.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t11')), maximum)
-									new = Queue(troop = army.t11, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t11, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t11.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1322,7 +1323,7 @@ def get_building(request, pos):
 									nex = army.t8.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t8')), maximum)
-									new = Queue(troop = army.t8, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t8, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(int( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t8.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1334,7 +1335,7 @@ def get_building(request, pos):
 									nex = army.t9.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t9')), maximum)
-									new = Queue(troop = army.t9, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t9, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t9.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1346,7 +1347,7 @@ def get_building(request, pos):
 									nex = army.t10.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t10')), maximum)
-									new = Queue(troop = army.t10, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t10, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t10.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1358,7 +1359,7 @@ def get_building(request, pos):
 									nex = army.t11.troop.training_time
 									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 									train = min(int(form.cleaned_data.get('t11')), maximum)
-									new = Queue(troop = army.t11, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = barracks.end_time + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									new = Queue(troop = army.t11, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
 									take = player.last_village.resources
 									cost = army.t11.troop.training_cost
 									take.oil -= cost.oil * train
@@ -1374,7 +1375,7 @@ def get_building(request, pos):
 								nex = army.t8.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t8')), maximum)
-								new = Queue(troop = army.t8, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t8, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t8.troop.training_cost
 								take.oil -= cost.oil * train
@@ -1386,7 +1387,7 @@ def get_building(request, pos):
 								nex = army.t9.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t9')), maximum)
-								new = Queue(troop = army.t9, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t9, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t9.troop.training_cost
 								take.oil -= cost.oil * train
@@ -1398,7 +1399,7 @@ def get_building(request, pos):
 								nex = army.t10.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t10')), maximum)
-								new = Queue(troop = army.t10, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t10, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t10.troop.training_cost
 								take.oil -= cost.oil * train
@@ -1410,7 +1411,7 @@ def get_building(request, pos):
 								nex = army.t11.troop.training_time
 								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 								train = min(int(form.cleaned_data.get('t11')), maximum)
-								new = Queue(troop = army.t11, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								new = Queue(troop = army.t11, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 								take = player.last_village.resources
 								cost = army.t11.troop.training_cost
 								take.oil -= cost.oil * train
@@ -1428,7 +1429,7 @@ def get_building(request, pos):
 							nex = army.t8.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t8')), maximum)
-							new = Queue(troop = army.t8, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t8, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t8.troop.training_cost
 							take.oil -= cost.oil * train
@@ -1440,7 +1441,7 @@ def get_building(request, pos):
 							nex = army.t9.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t9')), maximum)
-							new = Queue(troop = army.t9, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t9, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t9.troop.training_cost
 							take.oil -= cost.oil * train
@@ -1452,7 +1453,7 @@ def get_building(request, pos):
 							nex = army.t10.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t10')), maximum)
-							new = Queue(troop = army.t10, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t10, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t10.troop.training_cost
 							take.oil -= cost.oil * train
@@ -1464,7 +1465,7 @@ def get_building(request, pos):
 							nex = army.t11.troop.training_time
 							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
 							train = min(int(form.cleaned_data.get('t11')), maximum)
-							new = Queue(troop = army.t11, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100 * int(train)), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							new = Queue(troop = army.t11, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
 							take = player.last_village.resources
 							cost = army.t11.troop.training_cost
 							take.oil -= cost.oil * train
@@ -1477,11 +1478,152 @@ def get_building(request, pos):
 						bar.save()
 						bar.queue.add(new)
 						bar.save()
-						tq = TrainingQueue(port = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * buildinga.lvl / 100))
+						tq = TrainingQueue(port = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )))
 					
 					return redirect ('/center/')
 			else:
 				form = AmmunitionForm(player_id = player.id, lvl = buildinga.lvl)
+			return render(request, 'game/camp.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok, 'unread_messages':count_messages(request), 'multi': True, 'form':form})
+		if (buildinga.building.name == 'Parliament' or buildinga.building.name == 'Summer residence') and buildinga.buinding.lvl > 10:
+			form = ParliForm(request.POST, player_id = player.id, lvl = buildinga.lvl)
+			if request.method == 'POST':
+				
+				if form.is_valid():
+					
+					if player.tribe.name == 'Partisans':
+						army = Partisan_troops.objects.get(id = 1)
+					elif player.tribe.name == 'Russians':
+						army = Russian_troops.objects.get(id = 1)
+					elif player.tribe.name == 'Americans':
+						army = American_troops.objects.get(id = 1)
+					elif player.tribe.name == 'Brittish':
+						army = Brittish_troops.objects.get(id = 1)
+					elif player.tribe.name == 'Germans':
+						army = German_troops.objects.get(id = 1)
+					elif player.tribe.name == 'Japanese':
+						army = Japanese_troops.objects.get(id = 1)
+						
+					if player.last_village.training_queue is not None:
+						queue = player.last_village.training_queue
+						if queue.barracks is not None:
+							barracks = queue.parli__set.order_by('-end_time')
+							if barracks.end_time < datetime.utcnow().replace(tzinfo=utc):
+								if form.cleaned_data.get('t0') > 0:
+									nex = army.t0.troop.training_time
+									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
+									train = min(int(form.cleaned_data.get('t0')), maximum)
+									new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									take = player.last_village.resources
+									cost = army.t0.troop.training_cost
+									take.oil -= cost.oil * train
+									take.iron -= cost.iron * train
+									take.wood -= cost.wood * train
+									take.food -= cost.food * train
+									take.save()
+								elif form.cleaned_data.get('t1') > 0:
+									nex = army.t1.troop.training_time
+									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
+									train = min(int(form.cleaned_data.get('t1')), maximum)
+									new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+									take = player.last_village.resources
+									cost = army.t1.troop.training_cost
+									take.oil -= cost.oil * train
+									take.iron -= cost.iron * train
+									take.wood -= cost.wood * train
+									take.food -= cost.food * train
+									take.save()
+							else:
+								if form.cleaned_data.get('t0') > 0:
+									nex = army.t0.troop.training_time
+									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
+									train = min(int(form.cleaned_data.get('t0')), maximum)
+									new = Queue(troop = army.t0, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(int( seconds = (int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									take = player.last_village.resources
+									cost = army.t0.troop.training_cost
+									take.oil -= cost.oil * train
+									take.iron -= cost.iron * train
+									take.wood -= cost.wood * train
+									take.food -= cost.food * train
+									take.save()
+								elif form.cleaned_data.get('t1') > 0:
+									nex = army.t1.troop.training_time
+									maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
+									train = min(int(form.cleaned_data.get('t1')), maximum)
+									new = Queue(troop = army.t1, quantity = int(train), start_time = barracks.end_time, end_time = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = barracks.end_time + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = barracks.end_time, building_lvl = buildinga.lvl)
+									take = player.last_village.resources
+									cost = army.t1.troop.training_cost
+									take.oil -= cost.oil * train
+									take.iron -= cost.iron * train
+									take.wood -= cost.wood * train
+									take.food -= cost.food * train
+									take.save()
+							new.save()
+							queue.add(new)
+							queue.save()
+						else:
+							if form.cleaned_data.get('t0') > 0:
+								nex = army.t0.troop.training_time
+								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
+								train = min(int(form.cleaned_data.get('t0')), maximum)
+								new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								take = player.last_village.resources
+								cost = army.t0.troop.training_cost
+								take.oil -= cost.oil * train
+								take.iron -= cost.iron * train
+								take.wood -= cost.wood * train
+								take.food -= cost.food * train
+								take.save()
+							elif form.cleaned_data.get('t1') > 0:
+								nex = army.t1.troop.training_time
+								maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
+								train = min(int(form.cleaned_data.get('t1')), maximum)
+								new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+								take = player.last_village.resources
+								cost = army.t1.troop.training_cost
+								take.oil -= cost.oil * train
+								take.iron -= cost.iron * train
+								take.wood -= cost.wood * train
+								take.food -= cost.food * train
+								take.save()
+							new.save()
+							bar = Parli()
+							bar.save()
+							bar.queue.add(new)
+							bar.save()
+					else:
+						if form.cleaned_data.get('t0') > 0:
+							nex = army.t0.troop.training_time
+							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
+							train = min(int(form.cleaned_data.get('t0')), maximum)
+							new = Queue(troop = army.t0, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							take = player.last_village.resources
+							cost = army.t0.troop.training_cost
+							take.oil -= cost.oil * train
+							take.iron -= cost.iron * train
+							take.wood -= cost.wood * train
+							take.food -= cost.food * train
+							take.save()
+						elif form.cleaned_data.get('t1') > 0:
+							nex = army.t1.troop.training_time
+							maximum = min(min(player.last_village.resources.oil // army.t0.troop.training_cost.oil, player.last_village.resources.iron // army.t0.troop.training_cost.iron), min(player.last_village.resources.wood // army.t0.troop.training_cost.wood, player.last_village.resources.food // army.t0.troop.training_cost.food))
+							train = min(int(form.cleaned_data.get('t1')), maximum)
+							new = Queue(troop = army.t1, quantity = int(train), start_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), end_time = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl)  * int(train))), next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )), last_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0), building_lvl = buildinga.lvl)
+							take = player.last_village.resources
+							cost = army.t1.troop.training_cost
+							take.oil -= cost.oil * train
+							take.iron -= cost.iron * train
+							take.wood -= cost.wood * train
+							take.food -= cost.food * train
+							take.save()
+						new.save()
+						bar = Parli()
+						bar.save()
+						bar.queue.add(new)
+						bar.save()
+						tq = TrainingQueue(parli = bar, next_update = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int((int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600) * (0.9**buildinga.lvl) )))		
+					return redirect ('/center/')
+			else:
+				form = ParliForm(player_id = player.id, lvl = buildinga.lvl)
 			return render(request, 'game/camp.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok, 'unread_messages':count_messages(request), 'multi': True, 'form':form})
 		return render(request, 'game/building.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok, 'unread_messages':count_messages(request)})
 	else:
@@ -1593,6 +1735,9 @@ def build(request,pos,bui):
 	cena = cena[0]
 	if resources.oil >= cena.oil and resources.iron >= cena.iron and resources.wood >= cena.wood and resources.food >= cena.food and player.last_village.free_crop >= cena.cost + 1:
 		setattr(player.last_village.center, pos, buildinga)
+		if buildinga.building.name == 'Parliament':
+			player.parliament = True
+			player.save()
 		player.last_village.center.save()
 		upgrade_building(request, pos)
 		return redirect('/center')

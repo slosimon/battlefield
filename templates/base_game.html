@@ -15,7 +15,7 @@
 	<link href="{% static 'css/responsive.css'%}" rel="stylesheet">
 	<script type="text/javascript">
 		function display_c(){
-			var refresh=1000; // Refresh rate in milli seconds
+			var refresh=50; // Refresh rate in milli seconds
 			mytime=setTimeout('display_ct()',refresh)
 		}
 		function display_ct() {
@@ -206,6 +206,23 @@
     <script type="text/javascript" src="{% static 'js/wow.min.js'%}"></script>
     <script type="text/javascript" src="{% static 'js/main.js'%}"></script>   
     <script type="text/javascript" src="{% static 'js/jquery.countTo.js'%}"></script>
+	<script>
+		$('#tab1 a').click(function (e) {
+			e.preventDefault();
+			$(this).tab('show');
+		});
 
+		// store the currently selected tab in the hash value
+		$("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
+			var id = $(e.target).attr("href").substr(1);
+			$.cookie('activeTab', id);
+		});
+
+			// on load of the page: switch to the currently selected tab
+			var hash = $.cookie('activeTab');
+			if (hash != null) {
+				$('#myTab a[href="#' + hash + '"]').tab('show');
+			}
+	</script>
 </body>
 </html>

@@ -94,7 +94,7 @@ class ConfirmationForm(forms.Form):
 
 def time(nex, lvl):
 	seconds = int(nex.second) + int(nex.minute)*60 + int(nex.hour)*3600
-	seconds = int(seconds * lvl/100)
+	seconds = int(seconds * 0.9**lvl)
 	return str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
 
 class CampForm(forms.Form):
@@ -121,9 +121,8 @@ class CampForm(forms.Form):
 		self.fields['t1'].help_text = '<br> <img src="' + army.t1.troop.image.url+'" class="margin-bottom" style="max-width: 60px" alt=""> <br>' + ' Oil: ' + str(army.t1.troop.training_cost.oil) + ' Iron: ' + str(army.t1.troop.training_cost.iron) + ' Wood: ' + str(army.t1.troop.training_cost.wood) + ' Food: ' + str(army.t1.troop.training_cost.food) + ' Costs: ' + str(army.t1.troop.consumption) + '<br> Training time: '+time(army.t1.troop.training_time, self.lvl)
 		if player.last_village.army.t1.count == -1:
 			self.fields['t1'].widget = form.HiddenInput()
-		print (self.fields['t0'].help_text)
-	t0 = forms.IntegerField(required = False)
-	t1 = forms.IntegerField(required = False)
+	t0 = forms.IntegerField(required = False, min_value=1)
+	t1 = forms.IntegerField(required = False, min_value=1)
 	class Meta:
 		fields = ('t0', 't1')
 	
@@ -157,9 +156,9 @@ class HangarForm(forms.Form):
 			self.fields['t3'].widget = form.HiddenInput()
 		if player.last_village.army.t4.count == -1:
 			self.fields['t4'].widget = form.HiddenInput()
-	t2 = forms.IntegerField(required = False)
-	t3 = forms.IntegerField(required = False)
-	t4 = forms.IntegerField(required = False)
+	t2 = forms.IntegerField(required = False, min_value=1)
+	t3 = forms.IntegerField(required = False, min_value=1)
+	t4 = forms.IntegerField(required = False, min_value=1)
 	class Meta:
 		fields = ('t2', 't3', 't4')	
 
@@ -193,9 +192,9 @@ class PortForm(forms.Form):
 			self.fields['t6'].widget = form.HiddenInput()
 		if player.last_village.army.t7.count == -1:
 			self.fields['t7'].widget = form.HiddenInput()
-	t5 = forms.IntegerField(required = False)
-	t6 = forms.IntegerField(required = False)
-	t7 = forms.IntegerField(required = False)
+	t5 = forms.IntegerField(required = False, min_value=1)
+	t6 = forms.IntegerField(required = False, min_value=1)
+	t7 = forms.IntegerField(required = False, min_value=1)
 	class Meta:
 		fields = ('t5', 't6', 't7')	
 
@@ -233,9 +232,40 @@ class ArtileryForm(forms.Form):
 			self.fields['t10'].widget = form.HiddenInput()
 		if player.last_village.army.t11.count == -1:
 			self.fields['t11'].widget = form.HiddenInput()
-	t8 = forms.IntegerField(required = False)
-	t9 = forms.IntegerField(required = False)
-	t10 = forms.IntegerField(required = False)
-	t11 = forms.IntegerField(required = False)
+	t8 = forms.IntegerField(required = False, min_value=1)
+	t9 = forms.IntegerField(required = False, min_value=1)
+	t10 = forms.IntegerField(required = False, min_value=1)
+	t11 = forms.IntegerField(required = False, min_value=1)
 	class Meta:
 		fields = ('t8', 't9', 't10', 't11')	
+
+class ParliForm(forms.Form):
+	def __init__(self,*args,**kwargs):
+		self.player_id = kwargs.pop('player_id')
+		self.lvl = kwargs.pop('lvl')
+		super(CampForm,self).__init__(*args,**kwargs)
+		player = Player.objects.get(id = int(self.player_id))
+		if player.tribe.name == 'Partisans':
+			army = Partisan_troops.objects.get(id = 1)
+		elif player.tribe.name == 'Russians':
+			army = Russian_troops.objects.get(id = 1)
+		elif player.tribe.name == 'Americans':
+			army = American_troops.objects.get(id = 1)
+		elif player.tribe.name == 'Brittish':
+			army = Brittish_troops.objects.get(id = 1)
+		elif player.tribe.name == 'Germans':
+			army = German_troops.objects.get(id = 1)
+		elif player.tribe.name == 'Japanese':
+			army = Japanese_troops.objects.get(id = 1)
+		self.fields['t12'].label = army.t12.troop.name 
+		self.fields['t13'].label = army.t13.troop.name
+		self.fields['t12'].help_text ='<br> <img src="' + army.t12.troop.image.url+'" class="margin-bottom" style="max-width: 60px" alt=""> <br>' + ' Oil: ' + str(army.t12.troop.training_cost.oil) + ' Iron: ' + str(army.t12.troop.training_cost.iron) + ' Wood: ' + str(army.t12.troop.training_cost.wood) + ' Food: ' + str(army.t12.troop.training_cost.food) + ' Costs: ' + str(army.t12.troop.consumption) + '<br> Training time: '+time(army.t12.troop.training_time, self.lvl)
+		self.fields['t13'].help_text = '<br> <img src="' + army.t13.troop.image.url+'" class="margin-bottom" style="max-width: 60px" alt=""> <br>' + ' Oil: ' + str(army.t13.troop.training_cost.oil) + ' Iron: ' + str(army.t13.troop.training_cost.iron) + ' Wood: ' + str(army.t13.troop.training_cost.wood) + ' Food: ' + str(army.t13.troop.training_cost.food) + ' Costs: ' + str(army.t13.troop.consumption) + '<br> Training time: '+time(army.t13.troop.training_time, self.lvl)
+		if player.last_village.army.t12.count == -1:
+			self.fields['t12'].widget = form.HiddenInput()
+		if player.last_village.army.t13.count == -1:
+			self.fields['t13'].widget = form.HiddenInput()
+	t12 = forms.IntegerField(required = False, min_value=1)
+	t13 = forms.IntegerField(required = False, min_value=1)
+	class Meta:
+		fields = ('t12', 't13')
