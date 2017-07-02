@@ -11,6 +11,7 @@
 					{% csrf_token %}
 					<input type="submit" class="btn btn-lg btn-success" value="Center map">
 				</form>
+				<p><strong>Distance:</strong> {{dist}}</p>
 				{% if village.name %}
 					<p>Send troops</p>
 					<p>Send resources</p>

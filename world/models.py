@@ -306,6 +306,7 @@ class Village(models.Model):
 	free_crop = models.IntegerField()
 	training_queue = models.ForeignKey(TrainingQueue, null = True, default = None)
 	party = models.ForeignKey(Party, default = None, null = True)
+	merchants = models.IntegerField(default = 0)
 
 class Update_negative(models.Model):
 	empty_time = models.DateTimeField()
@@ -525,6 +526,8 @@ class Market(models.Model):
 	sender = models.ForeignKey(Village, related_name = "Send")
 	recipent = models.ForeignKey(Village, related_name = "Get")
 	quantity = models.ForeignKey(Market_resources)
+	land = models.DateTimeField(default = None, null = True)
+	ret = models.DateTimeField(default = None, null = True)
 	
 class Market_offers(models.Model):
 	sender = models.ForeignKey(Village)

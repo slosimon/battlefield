@@ -32,19 +32,28 @@ from django.http import JsonResponse
 from slugify import slugify
 
 def count_messages(request):
-	player = Player.objects.get(user = request.user)
-	return len(Message.objects.filter(read = False, recipent = player))
+	try:
+		player = Player.objects.get(user = request.user)
+		return len(Message.objects.filter(read = False, recipent = player))
+	except Exception:
+		return None
 
 def invitations(request):
-	player = Player.objects.get(user = request.user)
-	total = len(Invitation.objects.filter(invited = player))
-	response_data ={}
-	response_data['invitations'] = total
-	response_data['gold'] = player.gold
-	print(len(Message.objects.filter(read = False, recipent = player)))
-	response_data['messages_count'] = count_messages(request)
-	response_data['player'] = player
-	print(response_data)
-	return (response_data)
+	try:
+		player = Player.objects.get(user = request.user)
+		total = len(Invitation.objects.filter(invited = player))
+		response_data ={}
+		response_data['invitations'] = total
+		response_data['gold'] = player.gold
+		response_data['messages_count'] = count_messages(request)
+		response_data['player'] = player
+		return (response_data)
+	except Exception:
+		response_data ={}
+		response_data['invitations'] = 0
+		response_data['gold'] = 0
+		response_data['messages_count'] = 0
+		response_data['player'] = 0
+		return (response_data)
 	
 	

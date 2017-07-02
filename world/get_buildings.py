@@ -223,7 +223,7 @@ def get_possible(player):
 					if ok:
 						possible.append('Hideout')
 						
-		if bajta[0] == 'Training camp' and bajta[1] == 20:
+		if bajta[0] == 'Training camp' and bajta[1] == 20 and not player.last_village.capital:
 			ok = True
 			for i in bajte:
 				if i[0] == 'Large camp':
@@ -232,7 +232,7 @@ def get_possible(player):
 			if ok:
 				possible.append('Large camp')
 				
-		if bajta[0] == 'Hangar' and bajta[1] == 20:
+		if bajta[0] == 'Hangar' and bajta[1] == 20 and not player.last_village.capital:
 			ok = True
 			for i in bajte:
 				if i[0] == 'Large hangar':

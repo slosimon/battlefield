@@ -76,7 +76,7 @@ urlpatterns = [
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler404='battlefield.views.handler404'
-if sys.argv[1] == 'runserver':
+if sys.argv[1] != 'shell' or sys.argv[1] != 'makemigrations' or sys.argv[1] != 'migrate':
 	t = Thread(target = world_views.init_map(), args = (), kwargs = {})
 	t.setDaemon(True)
 	t.start()

@@ -21,7 +21,7 @@
 		function display_ct() {
 			var strcount
 			var x = new Date()
-			var x1=x.getHours( )+ ":" + ("0" + x.getMinutes()).slice(-2) + ":" + ("0" + x.getSeconds()).slice(-2)
+			var x1=x.getUTCHours( )+ ":" + ("0" + x.getMinutes()).slice(-2) + ":" + ("0" + x.getSeconds()).slice(-2)
 			document.getElementById('ct').innerHTML = x1;
 
 			tt=display_c();
@@ -119,8 +119,28 @@
         </div>
     </header>
     <!--/#header-->
+    <script type="text/javascript">
+		( function() {
+			if (window.CHITIKA === undefined) { window.CHITIKA = { 'units' : [] }; };
+			var unit = {"calltype":"async[2]","publisher":"slosimon","width":728,"height":90,"sid":"Chitika Default"};
+			var placement_id = window.CHITIKA.units.length;
+			window.CHITIKA.units.push(unit);
+			document.write('<div id="chitikaAdBlock-' + placement_id + '"></div>');
+		}());
+	</script>
+	<script type="text/javascript" src="//cdn.chitika.net/getads.js" async></script>
     {%block content%}{%endblock%}
 
+	<script type="text/javascript">
+	  ( function() {
+		if (window.CHITIKA === undefined) { window.CHITIKA = { 'units' : [] }; };
+		var unit = {"calltype":"async[2]","publisher":"slosimon","width":300,"height":250,"sid":"Chitika Default"};
+		var placement_id = window.CHITIKA.units.length;
+		window.CHITIKA.units.push(unit);
+		document.write('<div id="chitikaAdBlock-' + placement_id + '"></div>');
+	}());
+	</script>
+	<script type="text/javascript" src="//cdn.chitika.net/getads.js" async></script>
     <footer id="footer">
         <div class="container">
             <div class="row">

@@ -100,6 +100,7 @@ def activate(request, uidb64, token):
 		player.last_update = datetime.utcnow().replace(tzinfo=utc)
 		best.name = player.user.username+"'s village"
 		best.population = 2
+		best.save()
 		village_start(player, best)
 		player.save()
 		return redirect('/login/')

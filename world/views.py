@@ -28,6 +28,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.timezone import utc
 import get_buildings
 from math import floor
+import math
 from slugify import slugify
 
 def count_messages(request):
@@ -135,10 +136,12 @@ def center(request):
 		if player.gold >= 2 or player.gold < 0 :
 			ok = True
 	return render(request, 'game/center.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'queue':queue, 'player':player, 'unread_messages':count_messages(request), 'ok':ok})
+
+from django.db.models import Count
  
 @login_required	
 def pop_ranking(request):
-	players = Player.objects.all().order_by('-population')
+	players = Player.objects.annotate(num_selo=Count('villages')).filter(num_selo__gt = 0).order_by('-population')
 	count = Player.objects.count()
 	player = Player.objects.get(user = request.user)
 	bar = ['Player', 'Villages','Tribe','Population']
@@ -161,7 +164,7 @@ def pop_ranking(request):
 		
 @login_required	
 def attack_ranking(request):
-	players = Player.objects.all().order_by('-attack_points')
+	players = Player.objects.annotate(num_selo=Count('villages')).filter(num_selo__gt = 0).order_by('-attack_points')
 	count = Player.objects.count()
 	player = Player.objects.get(user = request.user)
 	bar = ['Player', 'Villages','Tribe','Attack Points']
@@ -184,7 +187,7 @@ def attack_ranking(request):
 	
 @login_required	
 def def_ranking(request):
-	players = Player.objects.all().order_by('-def_points')
+	players = Player.objects.annotate(num_selo=Count('villages')).filter(num_selo__gt = 0).order_by('-def_points')
 	count = Player.objects.count()
 	player = Player.objects.get(user = request.user)
 	bar = ['Player', 'Villages','Tribe','Defense Points']
@@ -207,10 +210,10 @@ def def_ranking(request):
 	
 @login_required	
 def weekly_ranking(request):
-	attack = Player.objects.extra(select={'offset': 'attack_points - old_att'}).order_by('-offset')
-	defo = Player.objects.extra(select={'offset': 'def_points - old_def'}).order_by('-offset')
-	rank = Player.objects.extra(select={'offset': 'population - old_rank'}).order_by('-offset')
-	raid = Player.objects.all().order_by('-raided')
+	attack = Player.objects.annotate(num_selo=Count('villages')).filter(num_selo__gt = 0).extra(select={'offset': 'attack_points - old_att'}).order_by('-offset')
+	defo = Player.objects.annotate(num_selo=Count('villages')).filter(num_selo__gt = 0).extra(select={'offset': 'def_points - old_def'}).order_by('-offset')
+	rank = Player.objects.annotate(num_selo=Count('villages')).filter(num_selo__gt = 0).extra(select={'offset': 'population - old_rank'}).order_by('-offset')
+	raid = Player.objects.annotate(num_selo=Count('villages')).filter(num_selo__gt = 0).order_by('-raided')
 	user = request.user
 	user = Player.objects.get(user = user)
 	one = zip(attack,defo)
@@ -227,6 +230,16 @@ def find_headquarters_bonus(village):
 			return head[0].bonus
 			break
 	return 100
+	
+def find_railway_bonus(village):
+	pos = ['pos_01','pos_02','pos_03','pos_04','pos_05','pos_06','pos_07','pos_08','pos_09','pos_10','pos_11','pos_12','pos_13','pos_14','pos_15','pos_16','pos_17','pos_18','pos_19','pos_20','pos_21','pos_22','pos_23','pos_24']
+	for i in pos:
+		path = getattr(village.center,i)
+		if path.building.name == 'Railway':
+			head = path.lvl
+			return (head * 0.1 + 1)
+			break
+	return 1
 			
 @login_required
 def field(request, pos):
@@ -251,27 +264,43 @@ def field(request, pos):
 	now = now[0]
 	current_production = now.bonus
 	nex = field.name.cost.filter(level = current_lvl+1)
-	nex = nex[0]
-	upgraded_production = nex.bonus
-	cost_oil = nex.oil
-	cost_iron = nex.iron
-	cost_wood = nex.wood
-	cost_food = nex.food
-	needed = 0
-	if str(field.name) == str('Farm'):
-		needed = -100000
-	else:
-		needed = nex.cost
-	seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
-	seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
-	upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
 	description = field.name.description
+	try:
+		nex = nex[0]
+		upgraded_production = nex.bonus
+		cost_oil = nex.oil
+		cost_iron = nex.iron
+		cost_wood = nex.wood
+		cost_food = nex.food
+	
+		needed = 0
+		if str(field.name) == str('Farm'):
+			needed = -100000
+		else:
+			needed = nex.cost
+		seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
+		seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+		upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
+		
+	except Exception:
+		nex = None
+		cost_oil = 0
+		cost_iron = 0
+		cost_wood = 0
+		cost_food = 0
+	
+		needed = 0
+		
+		seconds = 0
+		seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+		upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2)) 
 	ok = "0" # TODO
-	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= needed + 1 and (nex.level <= 10 or player.last_village.capital):
-		if player.last_village.field_1 is None:
-			ok = "1"
-		elif player.last_village.field_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
-			ok = "1"
+	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food  and nex != 0:
+		if player.last_village.free_crop >= needed + 1 and (nex.level <= 10 or player.last_village.capital):
+			if player.last_village.field_1 is None:
+				ok = "1"
+			elif player.last_village.field_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
+				ok = "1"
 	try:
 		picture = (field.name.image.url)
 	except Exception:
@@ -288,51 +317,72 @@ def upgrade_field(request, pos):
 	field = getattr(player.last_village.fields, pos)
 	current_lvl = field.lvl
 	nex = field.name.cost.filter(level = current_lvl+1)
-	nex = nex[0]
-	cost_oil = nex.oil
-	cost_iron = nex.iron
-	cost_wood = nex.wood
-	cost_food = nex.food
-	needed = 0
-	if str(field.name) == str('Farm'):
-		needed = -100000
-	else:
-		needed = nex.cost
-	seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
-	seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
-	upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
-	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= needed + 1 and (nex.level <= 10 or player.last_village.capital): 
-		if player.last_village.field_1 is None:
-			resources.oil -= cost_oil
-			resources.iron -= cost_iron
-			resources.wood -= cost_wood
-			resources.food -= cost_food
-			resources.save()
-			queue = FieldQueue()
-			queue.field = field
-			queue.to = current_lvl+1
-			queue.end = datetime.utcnow().replace(tzinfo=utc)+timedelta(seconds = seconds)
-			queue.save()
-			player.last_village.field_1 = queue
-			player.last_village.next_update = queue.end
-			player.last_village.save()
-			player.next_update = queue.end
-			player.save()
-		elif player.last_village.field_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
-			resources.oil -= cost_oil
-			resources.iron -= cost_iron
-			resources.wood -= cost_wood
-			resources.food -= cost_food
-			resources.save()
-			queue = FieldQueue()
-			queue.field = field
-			queue.to = current_lvl+1
-			queue.begin = player.last_village.field_1.end
-			queue.end = player.last_village.field_1.end+timedelta(seconds = seconds)
-			queue.save()
-			player.last_village.field_2 = queue
+	try:
+		nex = nex[0]
+		cost_oil = nex.oil
+		cost_iron = nex.iron
+		cost_wood = nex.wood
+		cost_food = nex.food
+		needed = 0
+		if str(field.name) == str('Farm'):
+			needed = -100000
+		else:
+			needed = nex.cost
+		seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
+		seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+		upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
+	except Exception:
+		nex = None
+		cost_oil = 0
+		cost_iron = 0
+		cost_wood = 0
+		cost_food = 0
+	
+		needed = 0
+		
+		seconds = 0
+		seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+		upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2)) 
+	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food  and nex is not None: 
+		if player.last_village.free_crop >= needed + 1 and (nex.level <= 10 or player.last_village.capital):
+			if player.last_village.field_1 is None:
+				resources.oil -= cost_oil
+				resources.iron -= cost_iron
+				resources.wood -= cost_wood
+				resources.food -= cost_food
+				resources.save()
+				queue = FieldQueue()
+				queue.field = field
+				queue.to = current_lvl+1
+				queue.end = datetime.utcnow().replace(tzinfo=utc)+timedelta(seconds = seconds)
+				queue.save()
+				player.last_village.field_1 = queue
+				player.last_village.next_update = queue.end
+				player.last_village.save()
+				player.next_update = queue.end
+				player.save()
+			elif player.last_village.field_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
+				resources.oil -= cost_oil
+				resources.iron -= cost_iron
+				resources.wood -= cost_wood
+				resources.food -= cost_food
+				resources.save()
+				queue = FieldQueue()
+				queue.field = field
+				queue.to = current_lvl+1
+				queue.begin = player.last_village.field_1.end
+				queue.end = player.last_village.field_1.end+timedelta(seconds = seconds)
+				queue.save()
+				player.last_village.field_2 = queue
 			player.last_village.save()
 	return redirect ('/fields/')
+
+def distance(village_1, village_2):
+	distx = min(min((village_1.location_latitude - village_2.location_latitude)** 2 , (village_1.location_latitude - village_2.location_latitude - 2 * settings.MAP_SIZE - 2)** 2), (village_1.location_latitude - village_2.location_latitude + 2 * settings.MAP_SIZE + 2)** 2)  # TODO 
+					
+	disty = distx = min(min((village_1.location_longitude - village_2.location_longitude)** 2, (village_1.location_longitude - village_2.location_longitude - 2 * settings.MAP_SIZE - 2)** 2), (village_1.location_longitude - village_2.location_longitude + 2 * settings.MAP_SIZE + 2)** 2)
+	
+	return math.sqrt(distx + disty)
 	
 @login_required
 def get_building(request, pos):
@@ -358,28 +408,137 @@ def get_building(request, pos):
 		now = now[0]
 		current_production = now.bonus
 		nex = buildinga.building.cost.filter(level = current_lvl+1)
-		nex = nex[0]
-		upgraded_production = nex.bonus
-		cost_oil = nex.oil
-		cost_iron = nex.iron
-		cost_wood = nex.wood
-		cost_food = nex.food
-		seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
-		seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
-		upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
 		description = buildinga.building.description
+		try:
+			nex = nex[0]
+			upgraded_production = nex.bonus
+			cost_oil = nex.oil
+			cost_iron = nex.iron
+			cost_wood = nex.wood
+			cost_food = nex.food
+			seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
+			seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+			upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
+			
+		except Exception:
+			nex = None
+			cost_oil = 0
+			cost_iron = 0
+			cost_wood = 0
+			cost_food = 0
+		
+			needed = 0
+			
+			seconds = 0
+			seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+			upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2)) 
 		ok = "0" # TODO
-		if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= nex.cost + 1:
-			if player.last_village.building_1 is None:
-				ok = "1"
-			elif player.last_village.building_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
-				ok = "1"
+		if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and nex is not None:
+			if player.last_village.free_crop >= nex.cost + 1:
+				if player.last_village.building_1 is None:
+					ok = "1"
+				elif player.last_village.building_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
+					ok = "1"
 		try:
 			picture = (buildinga.building.image.url)
 		except Exception:
 			picture = ('/media/init/img/buildings/none.png')
 			
 		# TODO view based on building (market, bunker, hero's birth house, townhall, university (SUM = 5) )
+		if buildinga.building.name == 'Market':
+			form = MarketForm(request.POST)
+			if request.method == 'POST':
+				
+				if form.is_valid():
+					resi = Market_resources()
+					speed = 0
+					if player.tribe.name == 'Partisans':
+						tribe_bonus = 800
+						speed = 12 * settings.SPEED
+					elif player.tribe.name == 'Russians':
+						tribe_bonus = 750
+						speed = 11 * settings.SPEED
+					elif player.tribe.name == 'Americans':
+						tribe_bonus = 700
+						speed = 10 * settings.SPEED
+					elif player.tribe.name == 'Brittish':
+						tribe_bonus = 850
+						speed = 11 * settings.SPEED
+					elif player.tribe.name == 'Germans':
+						tribe_bonus = 800
+						speed = 12 * settings.SPEED
+					elif player.tribe.name == 'Japanese':
+						tribe_bonus =750
+						speed = 10 * settings.SPEED
+						
+					bon = find_railway_bonus(player.last_village)
+					can_carry = (buildinga.level - player.last_village.merchants)* tribe_bonus * bon
+					suma = 0
+					
+					if form.cleaned_data.get('oil') > 0:
+						if form.cleaned_data.get('oil') > oil: 
+							resi.oil = oil
+							suma += oil
+						else: 
+							resi.oil = int(form.cleaned_data.get('oil'))
+							suma += int(form.cleaned_data.get('oil'))
+					if form.cleaned_data.get('iron') > 0 :
+						if form.cleaned_data.get('iron') > iron: 
+							resi.iron = iron
+							suma += iron
+						else: 
+							resi.iron = int(form.cleaned_data.get('iron'))
+							suma += int(form.cleaned_data.get('iron'))
+					if form.cleaned_data.get('wood') > 0 :
+						if form.cleaned_data.get('wood') > wood: 
+							resi.wood = wood
+							suma += wood
+						else: 
+							resi.wood = int(form.cleaned_data.get('wood'))
+							suma += int(form.cleaned_data.get('wood'))
+					if form.cleaned_data.get('food') > 0 :
+						if form.cleaned_data.get('good') > good: 
+							resi.good = good
+							suma += good
+						else: 
+							resi.food = int(form.cleaned_data.get('food'))
+							suma += int(form.cleaned_data.get('food'))
+					
+					new_suma = suma	
+					if can_carry < suma:
+						ratio = can_carry * 1.0 / suma
+						resi.oil = int(resi.oil * ratio)
+						resi.iron = int(resi.iron * ratio)
+						resi.wood = int(resi.wood * ratio)
+						resi.food = int(resi.food * ratio)
+						new_suma = resi.oil + resi.iron + resi.wood + resi.food
+						resi.oil += can_carry-new_suma
+					
+					player.last_village.merchants += new_suma // (tribe_bonus * bon)
+					
+					resi.save()
+					
+					selo = Village.objects.filter(location_latitude = int(form.cleaned_data.get('x')), location_longitude = int(form.cleaned_data.get('y')))[0]
+					
+					dist = distance(player.last_village, selo)
+					
+					land = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = int(dist * 60.0 * 60 / speed))
+					ret = datetime.utcnow().replace(tzinfo=utc).replace(microsecond=0) + timedelta(seconds = 2 * int(dist * 60.0 * 60 / speed))
+					
+					Market.objects.create(sender = player.last_village, recipent = selo, quantity = resi, land = land, ret = ret)
+					
+					player.last_village.resources.oil -= resi.oil
+					player.last_village.resources.iron -= resi.iron
+					player.last_village.resources.wood -= resi.wood
+					player.last_village.resources.food -= resi.food
+					player.last_village.resources.save()
+					player.last_village.save()
+					
+					return redirect ('/center/')
+			else:
+				form = MarketForm()
+			return render(request, 'game/camp.html', {'player': player, 'village_name' : village_name, 'resources': resources, 'warehouse': warehouse, 'silo' : silo,'field':field, 'oil': oil, 'iron':iron, 'wood':wood, 'food':food, 'production':production, 'cost_oil':cost_oil, 'cost_iron':cost_iron, 'cost_wood': cost_wood, 'cost_food':cost_food, 'upgrade_time':upgrade_time, 'description':description, 'picture':picture, 'pos':pos, 'ok':ok, 'unread_messages':count_messages(request), 'multi': True, 'form':form})
+		
 		if buildinga.building.name == 'Training camp':
 			form = CampForm(request.POST, player_id = player.id, lvl = buildinga.lvl)
 			if request.method == 'POST':
@@ -1664,45 +1823,60 @@ def upgrade_building(request, pos):
 	building = getattr(player.last_village.center, pos)
 	current_lvl = building.lvl
 	nex = building.building.cost.filter(level = current_lvl+1)
-	nex = nex[0]
-	cost_oil = nex.oil
-	cost_iron = nex.iron
-	cost_wood = nex.wood
-	cost_food = nex.food
-	seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
-	seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
-	upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
-	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= nex.cost + 1:
-		if player.last_village.building_1 is None:
-			resources.oil -= cost_oil
-			resources.iron -= cost_iron
-			resources.wood -= cost_wood
-			resources.food -= cost_food
-			resources.save()
-			queue = BuildingQueue()
-			queue.building = building
-			queue.to = current_lvl+1
-			queue.end = datetime.utcnow().replace(tzinfo=utc)+timedelta(seconds = seconds)
-			queue.save()
-			player.last_village.building_1 = queue
-			player.last_village.next_update = queue.end
-			player.last_village.save()
-			player.next_update = queue.end
-			player.save()
-		elif player.last_village.building_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
-			resources.oil -= cost_oil
-			resources.iron -= cost_iron
-			resources.wood -= cost_wood
-			resources.food -= cost_food
-			resources.save()
-			queue = BuildingQueue()
-			queue.building = building
-			queue.to = current_lvl+1
-			queue.begin = player.last_village.building_1.end
-			queue.end = player.last_village.building_1.end+timedelta(seconds = seconds)
-			queue.save()
-			player.last_village.building_2 = queue
-			player.last_village.save()
+	try:
+		nex = nex[0]
+		cost_oil = nex.oil
+		cost_iron = nex.iron
+		cost_wood = nex.wood
+		cost_food = nex.food
+		seconds = int(nex.time.second) + int(nex.time.minute)*60 + int(nex.time.hour)*3600 + int(nex.days) * 3600*24
+		seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+		upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2))
+	except Exception:
+		nex = None
+		cost_oil = 0
+		cost_iron = 0
+		cost_wood = 0
+		cost_food = 0
+	
+		needed = 0
+		
+		seconds = 0
+		seconds = int(seconds * find_headquarters_bonus(player.last_village)/100)
+		upgrade_time = str(str(int(seconds/3600)%24)+':'+ str(int((seconds%3600)/60)).zfill(2)+':'+str(int((seconds%60))).zfill(2)) 
+	if resources.oil >= cost_oil and resources.iron >= cost_iron and resources.wood >= cost_wood and resources.food >= cost_food and player.last_village.free_crop >= nex.cost + 1 and nex is not None:
+		if player.last_village.free_crop >= nex.cost + 1:
+				
+			if player.last_village.building_1 is None:
+				resources.oil -= cost_oil
+				resources.iron -= cost_iron
+				resources.wood -= cost_wood
+				resources.food -= cost_food
+				resources.save()
+				queue = BuildingQueue()
+				queue.building = building
+				queue.to = current_lvl+1
+				queue.end = datetime.utcnow().replace(tzinfo=utc)+timedelta(seconds = seconds)
+				queue.save()
+				player.last_village.building_1 = queue
+				player.last_village.next_update = queue.end
+				player.last_village.save()
+				player.next_update = queue.end
+				player.save()
+			elif player.last_village.building_2 is None and player.bonuses.plus_account >= datetime.utcnow().replace(tzinfo=utc):
+				resources.oil -= cost_oil
+				resources.iron -= cost_iron
+				resources.wood -= cost_wood
+				resources.food -= cost_food
+				resources.save()
+				queue = BuildingQueue()
+				queue.building = building
+				queue.to = current_lvl+1
+				queue.begin = player.last_village.building_1.end
+				queue.end = player.last_village.building_1.end+timedelta(seconds = seconds)
+				queue.save()
+				player.last_village.building_2 = queue
+				player.last_village.save()
 	return redirect ('/center/')
 
 @login_required	
@@ -1937,7 +2111,7 @@ def buy(request,arg):
 		player.gold = -1
 		player.save()
 	sleep(1)
-	return redirect('/fields/')
+	return redirect('')
 
 def get_bonus(i):
 	if i== 1:
@@ -1956,7 +2130,8 @@ def village_view(request,x,y):
 	y = int(y)
 	try:
 		selo = Village.objects.filter(location_latitude = x, location_longitude = y)[0]
-		return render(request, 'game/village.html', {'village':selo, 'player':player, 'unread_messages':count_messages(request), 'x':x, 'y':y})
+		dist = distance(selo, player.last_village)
+		return render(request, 'game/village.html', {'village':selo, 'player':player, 'unread_messages':count_messages(request), 'x':x, 'y':y, 'dist':dist})
 	except Exception:
 		try:
 			selo = Oasis.objects.filter(location_latitude = x, location_longitude = y)[0]
@@ -1973,9 +2148,10 @@ def village_view(request,x,y):
 			troops = zip(ll,namess)
 			bonuses = []
 			bonuses.append(get_bonus(selo.bonus_1))
+			dist = distance(selo, player.last_village)
 			if selo.bonus_2 is not None:
 				bonuses.append(get_bonus(selo.bonus_2))
-			return render(request, 'game/oasis.html', {'village':selo, 'player':player, 'unread_messages':count_messages(request), 'troops':troops, 'bonuses':bonuses, 'x':x, 'y':y})
+			return render(request, 'game/oasis.html', {'village':selo, 'player':player, 'unread_messages':count_messages(request), 'troops':troops, 'bonuses':bonuses, 'x':x, 'y':y, 'dist':dist})
 		except:
 			return redirect('/map/x='+str(x)+'y='+str(y)+'/')
 			

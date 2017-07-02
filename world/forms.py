@@ -7,6 +7,7 @@ from nocaptcha_recaptcha.fields import NoReCaptchaField
 from models import *
 from troops import models as tm
 from datetime import datetime, timedelta
+from django.conf import settings
 
 class SignUpForm(UserCreationForm):
 	ne = 'ne'
@@ -269,3 +270,22 @@ class ParliForm(forms.Form):
 	t13 = forms.IntegerField(required = False, min_value=1)
 	class Meta:
 		fields = ('t12', 't13')
+
+class MarketForm(forms.Form):
+	oil = forms.IntegerField(required = False,  min_value=1)
+	iron = forms.IntegerField(required = False,  min_value=1)
+	wood = forms.IntegerField(required = False,  min_value=1)
+	food = forms.IntegerField(required = False,  min_value=1)
+	x = forms.IntegerField(min_value=-1 * settings.MAP_SIZE, max_value = settings.MAP_SIZE)
+	y = forms.IntegerField(min_value=-1 * settings.MAP_SIZE, max_value = settings.MAP_SIZE)
+	
+	def clean(self):
+		form_data = self.cleaned_data
+		selo = Village.objects.filter(location_latitude = int(form.data['x']), location_longitude = int(form.data['y']))[0]
+		if selo.population <= 0:
+			self._errors["x"] = [_('No such village exists')] # Will raise a error message
+			del form_data['x']
+			del form_data['y']
+		return form_data
+	class Meta:
+		fields = ('oil','iron','wood','food','x','y')
